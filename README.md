@@ -69,3 +69,4 @@ Nesta versão, a equipe usa o painel do Supabase:
 - Gestão completa de lotes, cupons e estoque
 - Upload de imagens oficiais dos palestrantes e produtos
 # entre-nos
+# entre-nos
