@@ -68,3 +68,4 @@ Nesta versão, a equipe usa o painel do Supabase:
 - Check-in com leitor de QR Code
 - Gestão completa de lotes, cupons e estoque
 - Upload de imagens oficiais dos palestrantes e produtos
+# entre-nos
