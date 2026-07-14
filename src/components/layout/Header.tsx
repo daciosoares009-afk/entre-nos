@@ -17,7 +17,7 @@ export function Header() {
   return (
     <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/95 backdrop-blur">
       <div className="container-page flex h-16 items-center justify-between">
-        <Link to="/" className="flex items-center gap-3 rounded-md bg-dark px-2 py-1 font-bold text-dark">
+        <Link to="/" className="flex items-center gap-3 rounded-md px-2 py-1 font-bold text-dark">
           <img
             src={logoEntreNos}
             alt="Entre Nós Experience"

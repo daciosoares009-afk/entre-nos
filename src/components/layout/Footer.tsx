@@ -8,7 +8,7 @@ export function Footer() {
     <footer className="border-t border-slate-100 bg-white">
       <div className="container-page grid gap-8 py-10 md:grid-cols-[1fr_auto]">
         <div>
-          <div className="mb-3 inline-flex rounded-md bg-dark p-3 font-bold text-dark">
+          <div className="mb-3 inline-flex rounded-md p-3 font-bold text-dark">
             <img
               src={logoEntreNos}
               alt="Entre Nós Experience"

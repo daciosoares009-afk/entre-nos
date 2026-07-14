@@ -37,7 +37,7 @@ export function HomePage() {
 
           <div className="relative">
             <div className="rounded-lg bg-dark p-6 text-white shadow-soft">
-              <div className="mb-6 rounded-md bg-black p-4">
+              <div className="mb-6 rounded-md bg-white p-4">
                 <img src={logoExperience} alt="Entre Nós Experience" className="mx-auto h-48 w-full object-contain" />
               </div>
               <div className="rounded-md bg-white/10 p-5">

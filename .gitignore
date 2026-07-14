@@ -1,5 +1,8 @@
 node_modules
+.npm-cache
 dist
+*.tsbuildinfo
+*.timestamp-*.mjs
 .env
 .env.local
 .DS_Store

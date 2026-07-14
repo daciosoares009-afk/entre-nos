@@ -1,7 +1,8 @@
-import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { build } from 'vite';
 
-export default defineConfig({
+await build({
+  configFile: false,
   plugins: [react()],
   assetsInclude: ['**/*.MOV'],
 });
