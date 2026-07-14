@@ -3,12 +3,14 @@ import { Loader2 } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { useForm, type UseFormRegisterReturn } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import productCaneca from '../assets/product-caneca.jpeg';
+import productCopoAcrilico from '../assets/product-copo-acrilico.jpeg';
 import { FormError } from '../components/ui/FormError';
 import { productConfig } from '../data/products';
 import { registrationSchema, type RegistrationFormData } from '../schemas/registrationSchema';
 import { createRegistration } from '../services/registrationService';
-import { maskPhone } from '../utils/format';
+import { formatCurrency, maskPhone } from '../utils/format';
 
 export function RegistrationPage() {
   const navigate = useNavigate();
@@ -28,11 +30,17 @@ export function RegistrationPage() {
       shirtQuantity: 1,
       wantsButton: false,
       buttonQuantity: 1,
+      wantsCup: false,
+      cupQuantity: 1,
+      wantsMug: false,
+      mugQuantity: 1,
       imageAuthorization: false,
     },
   });
 
   const wantsShirt = watch('wantsShirt');
+  const wantsCup = watch('wantsCup');
+  const wantsMug = watch('wantsMug');
 
   async function onSubmit(data: RegistrationFormData) {
     setError('');
@@ -115,10 +123,41 @@ export function RegistrationPage() {
             )}
           </div>
 
+          <div>
+            <h2 className="text-lg font-bold text-dark">Demais produtos oficiais</h2>
+            <p className="mt-1 text-sm leading-6 text-muted">Selecione os produtos desejados. Os valores serão incluídos no total da inscrição.</p>
+            <div className="mt-4 grid gap-4 sm:grid-cols-2">
+              <ProductInterest
+                title="Copo acrílico"
+                description="Resistente, leve e exclusivo do evento."
+                image={productCopoAcrilico}
+                checked={wantsCup}
+                checkbox={register('wantsCup')}
+                quantity={register('cupQuantity')}
+                quantityError={errors.cupQuantity?.message}
+                price={productConfig.cupPrice}
+              />
+              <ProductInterest
+                title="Caneca oficial"
+                description="Cerâmica premium com design Entre Nós."
+                image={productCaneca}
+                checked={wantsMug}
+                checkbox={register('wantsMug')}
+                quantity={register('mugQuantity')}
+                quantityError={errors.mugQuantity?.message}
+                price={productConfig.mugPrice}
+              />
+            </div>
+          </div>
+
           <div className="grid gap-3 text-sm">
-            <Checkbox label="Aceito os termos de uso." error={errors.acceptedTerms?.message} register={register('acceptedTerms')} />
+            <Checkbox error={errors.acceptedTerms?.message} register={register('acceptedTerms')}>
+              Aceito os <Link className="font-semibold text-primary underline underline-offset-2" to="/termos" target="_blank" onClick={(event) => event.stopPropagation()}>Termos de Uso</Link>.
+            </Checkbox>
             <Checkbox label="Autorizo o uso de imagem em registros do evento." register={register('imageAuthorization')} />
-            <Checkbox label="Consinto com o tratamento dos meus dados conforme a LGPD." error={errors.privacyConsent?.message} register={register('privacyConsent')} />
+            <Checkbox error={errors.privacyConsent?.message} register={register('privacyConsent')}>
+              Consinto com o tratamento dos meus dados conforme a <Link className="font-semibold text-primary underline underline-offset-2" to="/privacidade" target="_blank" onClick={(event) => event.stopPropagation()}>LGPD e a Política de Privacidade</Link>.
+            </Checkbox>
           </div>
 
           <button className="btn-primary w-full" disabled={isSubmitting}>
@@ -141,12 +180,35 @@ function Field({ label, error, children }: { label: string; error?: string; chil
   );
 }
 
-function Checkbox({ label, error, register }: { label: string; error?: string; register: UseFormRegisterReturn }) {
+function ProductInterest({ title, description, image, price, checked, checkbox, quantity, quantityError }: { title: string; description: string; image: string; price: number; checked: boolean; checkbox: UseFormRegisterReturn; quantity: UseFormRegisterReturn; quantityError?: string }) {
+  return (
+    <article className="overflow-hidden rounded-lg border border-slate-200 bg-background">
+      <img src={image} alt={title} className="aspect-[4/3] w-full bg-white object-cover" />
+      <div className="p-4">
+        <label className="flex cursor-pointer items-start gap-3 font-semibold text-dark">
+          <input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-primary" {...checkbox} />
+          <span>{title}</span>
+        </label>
+        <p className="mt-2 text-sm leading-5 text-muted">{description}</p>
+        <p className="mt-2 text-lg font-bold text-primary">{formatCurrency(price)}</p>
+        {checked && (
+          <div className="mt-3 max-w-32">
+            <label className="label" htmlFor={`${quantity.name}-field`}>Quantidade</label>
+            <input id={`${quantity.name}-field`} className="field mt-1" type="number" min={1} max={20} {...quantity} />
+            <FormError message={quantityError} />
+          </div>
+        )}
+      </div>
+    </article>
+  );
+}
+
+function Checkbox({ label, children, error, register }: { label?: string; children?: ReactNode; error?: string; register: UseFormRegisterReturn }) {
   return (
     <label>
       <span className="flex items-start gap-3 text-text">
         <input type="checkbox" className="mt-1 h-4 w-4 accent-primary" {...register} />
-        <span>{label}</span>
+        <span>{children ?? label}</span>
       </span>
       <FormError message={error} />
     </label>

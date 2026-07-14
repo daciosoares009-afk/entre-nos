@@ -28,6 +28,10 @@ export async function createRegistration(data: RegistrationFormData): Promise<Re
     shirt_quantity: data.wantsShirt ? data.shirtQuantity : 0,
     wants_button: data.wantsButton,
     button_quantity: data.wantsButton ? data.buttonQuantity : 0,
+    wants_cup: data.wantsCup,
+    cup_quantity: data.wantsCup ? data.cupQuantity : 0,
+    wants_mug: data.wantsMug,
+    mug_quantity: data.wantsMug ? data.mugQuantity : 0,
     total_amount: totalAmount,
     payment_status: 'pending',
     ticket_code: ticketCode,
@@ -50,6 +54,10 @@ export async function createRegistration(data: RegistrationFormData): Promise<Re
     shirtQuantity: payload.shirt_quantity,
     wantsButton: data.wantsButton,
     buttonQuantity: payload.button_quantity,
+    wantsCup: data.wantsCup,
+    cupQuantity: payload.cup_quantity,
+    wantsMug: data.wantsMug,
+    mugQuantity: payload.mug_quantity,
     totalAmount,
   };
 }

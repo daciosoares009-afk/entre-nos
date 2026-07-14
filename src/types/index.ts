@@ -10,6 +10,10 @@ export type RegistrationSummary = {
   shirtQuantity: number;
   wantsButton: boolean;
   buttonQuantity: number;
+  wantsCup: boolean;
+  cupQuantity: number;
+  wantsMug: boolean;
+  mugQuantity: number;
   totalAmount: number;
 };
 

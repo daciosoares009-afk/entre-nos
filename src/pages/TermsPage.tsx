@@ -9,6 +9,18 @@ export function TermsPage() {
         <p className="mt-4 text-muted">
           Informações como local, produtos e preços podem ser ajustadas até a publicação oficial final. Valores provisórios estão identificados no arquivo de configuração do projeto.
         </p>
+        <h2 className="mt-6 text-xl font-bold text-dark">Inscrição e pagamento</h2>
+        <p className="mt-3 text-muted">
+          O envio do formulário não confirma automaticamente a entrada. A participação será confirmada após a validação do pagamento pela organização. O participante é responsável pela veracidade dos dados informados.
+        </p>
+        <h2 className="mt-6 text-xl font-bold text-dark">Produtos e reservas</h2>
+        <p className="mt-3 text-muted">
+          Os produtos selecionados e suas quantidades integram o valor total informado ao final da inscrição. A disponibilidade será confirmada pela organização após a validação do pagamento.
+        </p>
+        <h2 className="mt-6 text-xl font-bold text-dark">Privacidade e imagem</h2>
+        <p className="mt-3 text-muted">
+          Os dados pessoais são tratados conforme a Política de Privacidade e a LGPD. A autorização de uso de imagem é opcional e pode ser tratada pelos canais oficiais da organização.
+        </p>
       </article>
     </section>
   );

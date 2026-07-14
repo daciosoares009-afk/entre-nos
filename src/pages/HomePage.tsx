@@ -151,12 +151,12 @@ export function HomePage() {
 
       <section id="produtos" className="bg-white py-12 sm:py-16">
         <div className="container-page">
-          <SectionTitle eyebrow="Produtos oficiais" title="Conheça nossa coleção" description="Camisetas disponíveis para reserva durante a inscrição. Valores dos novos produtos serão divulgados em breve." />
+          <SectionTitle eyebrow="Produtos oficiais" title="Conheça nossa coleção" description="Escolha seus produtos durante a inscrição e confira os valores oficiais." />
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <ProductCard title="Camiseta branca" image={shirtWhite} price={productConfig.shirtPrice} />
             <ProductCard title="Camiseta preta" image={shirtBlack} price={productConfig.shirtPrice} />
-            <ProductCard title="Copo acrílico" image={productCopoAcrilico} description="Resistente, leve e desenvolvido especialmente para o evento." />
-            <ProductCard title="Caneca oficial" image={productCaneca} description="Caneca de cerâmica com design exclusivo Entre Nós Experience." />
+            <ProductCard title="Copo acrílico" image={productCopoAcrilico} price={productConfig.cupPrice} description="Resistente, leve e desenvolvido especialmente para o evento." />
+            <ProductCard title="Caneca oficial" image={productCaneca} price={productConfig.mugPrice} description="Caneca de cerâmica com design exclusivo Entre Nós Experience." />
           </div>
           <div className="mt-8 flex justify-center">
             <Link to="/inscricao" className="btn-primary">

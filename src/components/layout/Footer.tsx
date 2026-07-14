@@ -20,8 +20,8 @@ export function Footer() {
           </p>
         </div>
         <div className="grid grid-cols-2 items-center gap-4 text-sm sm:flex sm:flex-wrap md:max-w-sm md:justify-end">
-          <a className="inline-flex items-center gap-2 text-muted hover:text-primary" href="https://instagram.com" target="_blank" rel="noreferrer">
-            <Instagram size={18} /> Instagram
+          <a className="inline-flex items-center gap-2 text-muted hover:text-primary" href={`https://instagram.com/${env.instagramUsername}`} target="_blank" rel="noreferrer">
+            <Instagram size={18} /> @{env.instagramUsername}
           </a>
           <a className="inline-flex items-center gap-2 text-muted hover:text-primary" href={`https://wa.me/${env.whatsappNumber}`} target="_blank" rel="noreferrer">
             <MessageCircle size={18} /> WhatsApp

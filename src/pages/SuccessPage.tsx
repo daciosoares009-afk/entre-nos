@@ -49,6 +49,8 @@ export function SuccessPage() {
           <p className="break-words text-xl font-bold text-primary sm:text-2xl">{summary.registrationNumber}</p>
           <div className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
             <span>Camiseta: {summary.wantsShirt ? `${summary.shirtQuantity} ${summary.shirtColor} ${summary.shirtSize}` : 'Não selecionada'}</span>
+            <span>Copo acrílico: {summary.wantsCup ? `${summary.cupQuantity} unidade(s)` : 'Não selecionado'}</span>
+            <span>Caneca: {summary.wantsMug ? `${summary.mugQuantity} unidade(s)` : 'Não selecionada'}</span>
             <span className="font-bold text-dark">Valor total: {formatCurrency(summary.totalAmount)}</span>
           </div>
         </div>

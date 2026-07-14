@@ -15,6 +15,10 @@ create table if not exists public.registrations (
   shirt_quantity integer not null default 0 check (shirt_quantity between 0 and 10),
   wants_button boolean not null default false,
   button_quantity integer not null default 0 check (button_quantity between 0 and 20),
+  wants_cup boolean not null default false,
+  cup_quantity integer not null default 0 check (cup_quantity between 0 and 20),
+  wants_mug boolean not null default false,
+  mug_quantity integer not null default 0 check (mug_quantity between 0 and 20),
   total_amount numeric(10,2) not null default 0 check (total_amount >= 0),
   payment_status text not null default 'pending' check (payment_status in ('pending', 'under_review', 'paid', 'cancelled', 'refunded')),
   ticket_code text not null unique,
@@ -27,6 +31,11 @@ create table if not exists public.registrations (
   updated_at timestamptz not null default now(),
   unique (email, phone)
 );
+
+alter table public.registrations add column if not exists wants_cup boolean not null default false;
+alter table public.registrations add column if not exists cup_quantity integer not null default 0 check (cup_quantity between 0 and 20);
+alter table public.registrations add column if not exists wants_mug boolean not null default false;
+alter table public.registrations add column if not exists mug_quantity integer not null default 0 check (mug_quantity between 0 and 20);
 
 create table if not exists public.sponsor_requests (
   id uuid primary key default gen_random_uuid(),
