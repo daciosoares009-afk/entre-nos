@@ -1,0 +1,92 @@
+import { createClient } from 'npm:@supabase/supabase-js@2';
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+};
+const prices = { shirt: 45, cup: 12, mug: 40 };
+
+function json(body: unknown, status = 200) {
+  return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+}
+
+function getServiceRoleKey() {
+  const legacyKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  if (legacyKey) return legacyKey;
+  const keys = JSON.parse(Deno.env.get('SUPABASE_SECRET_KEYS') || '{}');
+  return keys.default as string | undefined;
+}
+
+Deno.serve(async (request) => {
+  if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (request.method !== 'POST') return json({ error: 'Método não permitido.' }, 405);
+
+  try {
+    const accessToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
+    const siteUrl = (Deno.env.get('PUBLIC_SITE_URL') || '').replace(/\/$/, '');
+    const supabaseUrl = Deno.env.get('SUPABASE_URL');
+    const serviceRoleKey = getServiceRoleKey();
+    if (!accessToken || !siteUrl || !supabaseUrl || !serviceRoleKey) {
+      return json({ error: 'Integração de pagamento não configurada.' }, 503);
+    }
+
+    const { registrationNumber, ticketCode } = await request.json();
+    if (!registrationNumber || !ticketCode) return json({ error: 'Inscrição inválida.' }, 400);
+
+    const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
+    const { data: registration, error: registrationError } = await supabase
+      .from('registrations')
+      .select('registration_number,ticket_code,name,email,wants_shirt,shirt_color,shirt_size,shirt_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity,payment_status')
+      .eq('registration_number', registrationNumber)
+      .eq('ticket_code', ticketCode)
+      .single();
+
+    if (registrationError || !registration) return json({ error: 'Inscrição não encontrada.' }, 404);
+    if (registration.payment_status === 'paid') return json({ error: 'Esta inscrição já está paga.' }, 409);
+
+    const items: Array<Record<string, unknown>> = [];
+    if (registration.wants_shirt && registration.shirt_quantity > 0) {
+      items.push({ id: 'camiseta-entre-nos', title: `Camiseta Entre Nós - ${registration.shirt_color} ${registration.shirt_size}`, quantity: registration.shirt_quantity, currency_id: 'BRL', unit_price: prices.shirt });
+    }
+    if (registration.wants_cup && registration.cup_quantity > 0) {
+      items.push({ id: 'copo-entre-nos', title: 'Copo acrílico Entre Nós', quantity: registration.cup_quantity, currency_id: 'BRL', unit_price: prices.cup });
+    }
+    if (registration.wants_mug && registration.mug_quantity > 0) {
+      items.push({ id: 'caneca-entre-nos', title: 'Caneca Entre Nós', quantity: registration.mug_quantity, currency_id: 'BRL', unit_price: prices.mug });
+    }
+    if (items.length === 0) return json({ error: 'Selecione pelo menos um produto para pagar.' }, 400);
+    const serverTotal = items.reduce((total, item) => total + Number(item.unit_price) * Number(item.quantity), 0);
+
+    const preferenceResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', 'X-Idempotency-Key': `entre-nos-${registration.registration_number}` },
+      body: JSON.stringify({
+        items,
+        payer: { name: registration.name, email: registration.email },
+        external_reference: registration.registration_number,
+        notification_url: `${supabaseUrl}/functions/v1/mercado-pago-webhook`,
+        statement_descriptor: 'ENTRE NOS',
+        back_urls: {
+          success: `${siteUrl}/sucesso?payment=approved`,
+          pending: `${siteUrl}/sucesso?payment=pending`,
+          failure: `${siteUrl}/sucesso?payment=failure`,
+        },
+        auto_return: 'approved',
+      }),
+    });
+
+    const preference = await preferenceResponse.json();
+    if (!preferenceResponse.ok || !preference.id || !preference.init_point) {
+      console.error('Mercado Pago preference error', preference);
+      return json({ error: 'Não foi possível iniciar o pagamento.' }, 502);
+    }
+
+    const { error: updateError } = await supabase.from('registrations').update({ mercado_pago_preference_id: preference.id, total_amount: serverTotal }).eq('registration_number', registration.registration_number);
+    if (updateError) console.error('Preference tracking update error', updateError);
+    return json({ checkoutUrl: preference.init_point, preferenceId: preference.id });
+  } catch (error) {
+    console.error('Create preference error', error);
+    return json({ error: 'Erro inesperado ao iniciar o pagamento.' }, 500);
+  }
+});

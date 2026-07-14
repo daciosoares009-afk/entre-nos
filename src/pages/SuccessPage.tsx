@@ -1,7 +1,9 @@
-import { MessageCircle, Receipt, Ticket } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Loader2, MessageCircle, Receipt, Ticket } from 'lucide-react';
+import { useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { env } from '../config/env';
 import type { RegistrationSummary } from '../types';
+import { createMercadoPagoCheckout } from '../services/paymentService';
 import { formatCurrency } from '../utils/format';
 
 function getSummary(): RegistrationSummary | null {
@@ -16,6 +18,23 @@ function getSummary(): RegistrationSummary | null {
 
 export function SuccessPage() {
   const summary = getSummary();
+  const [searchParams] = useSearchParams();
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
+  const paymentReturn = searchParams.get('payment');
+
+  async function handlePayment() {
+    if (!summary) return;
+    setPaymentError('');
+    setPaymentLoading(true);
+    try {
+      const checkoutUrl = await createMercadoPagoCheckout(summary.registrationNumber, summary.ticketCode);
+      window.location.assign(checkoutUrl);
+    } catch (error) {
+      setPaymentError(error instanceof Error ? error.message : 'Não foi possível iniciar o pagamento.');
+      setPaymentLoading(false);
+    }
+  }
 
   if (!summary) {
     return (
@@ -42,7 +61,11 @@ export function SuccessPage() {
           <Receipt size={30} />
         </div>
         <h1 className="mt-5 text-2xl font-bold text-dark sm:text-3xl">Inscrição registrada</h1>
-        <p className="mt-3 text-muted">Seu ingresso será liberado após confirmação manual do pagamento pela equipe.</p>
+        <p className="mt-3 text-muted">Seu ingresso será liberado automaticamente após a confirmação do pagamento pelo Mercado Pago.</p>
+
+        {paymentReturn === 'approved' && <div className="mt-5 rounded-md border border-success/20 bg-success/10 p-4 text-sm font-semibold text-success">Pagamento recebido. A confirmação automática pode levar alguns instantes.</div>}
+        {paymentReturn === 'pending' && <div className="mt-5 rounded-md bg-warning/10 p-4 text-sm text-text">Pagamento pendente. O ingresso será atualizado assim que o Mercado Pago confirmar.</div>}
+        {paymentReturn === 'failure' && <div className="mt-5 rounded-md border border-error/20 bg-error/5 p-4 text-sm text-error">O pagamento não foi concluído. Você pode tentar novamente.</div>}
 
         <div className="mt-6 rounded-lg border border-slate-100 bg-background p-5">
           <p className="text-sm text-muted">Número da inscrição</p>
@@ -56,16 +79,19 @@ export function SuccessPage() {
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <a href={env.paymentUrl} target="_blank" rel="noreferrer" className="btn-primary">
-            Acessar pagamento
-          </a>
+          <button type="button" onClick={handlePayment} disabled={paymentLoading || summary.totalAmount <= 0} className="btn-primary">
+            {paymentLoading && <Loader2 className="animate-spin" size={18} />}
+            {summary.totalAmount > 0 ? 'Pagar com Mercado Pago' : 'Nenhum valor para pagar'}
+          </button>
           <a href={`https://wa.me/${env.whatsappNumber}?text=${whatsappMessage}`} target="_blank" rel="noreferrer" className="btn-secondary">
             <MessageCircle size={18} /> Enviar comprovante
           </a>
         </div>
 
+        {paymentError && <div className="mt-4 rounded-md border border-error/20 bg-error/5 p-3 text-sm text-error">{paymentError}</div>}
+
         <div className="mt-6 rounded-md bg-warning/10 p-4 text-sm text-text">
-          Guarde o número da inscrição. Após a confirmação do pagamento, a equipe poderá validar seu ingresso digital.
+          Guarde o número da inscrição. O status será atualizado automaticamente após a confirmação do Mercado Pago.
         </div>
 
         <Link to={`/ingresso/${summary.ticketCode}`} className="btn-secondary mt-6 w-full sm:w-auto">

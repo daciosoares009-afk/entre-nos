@@ -11,7 +11,7 @@ export function TermsPage() {
         </p>
         <h2 className="mt-6 text-xl font-bold text-dark">Inscrição e pagamento</h2>
         <p className="mt-3 text-muted">
-          O envio do formulário não confirma automaticamente a entrada. A participação será confirmada após a validação do pagamento pela organização. O participante é responsável pela veracidade dos dados informados.
+          O envio do formulário não confirma automaticamente a entrada. Quando houver valor a pagar, a participação será confirmada após a validação do pagamento pelo Mercado Pago. O participante é responsável pela veracidade dos dados informados.
         </p>
         <h2 className="mt-6 text-xl font-bold text-dark">Produtos e reservas</h2>
         <p className="mt-3 text-muted">
