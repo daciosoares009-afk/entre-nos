@@ -33,7 +33,6 @@ export function RegistrationPage() {
   });
 
   const wantsShirt = watch('wantsShirt');
-  const wantsButton = watch('wantsButton');
 
   async function onSubmit(data: RegistrationFormData) {
     setError('');
@@ -47,13 +46,13 @@ export function RegistrationPage() {
   }
 
   return (
-    <section className="container-page py-12">
+    <section className="container-page py-8 sm:py-12">
       <div className="mx-auto max-w-3xl">
         <p className="text-sm font-bold uppercase tracking-wide text-primary">Inscrição</p>
-        <h1 className="mt-2 text-3xl font-bold text-dark sm:text-4xl">Participar do Entre Nós Experience</h1>
-        <p className="mt-3 text-muted">Preencha os dados abaixo. A confirmação do pagamento será feita manualmente pela equipe.</p>
+        <h1 className="mt-2 text-2xl font-bold leading-tight text-dark sm:text-4xl">Participar do Entre Nós Experience</h1>
+        <p className="mt-3 text-sm leading-6 text-muted sm:text-base">Preencha os dados abaixo. A confirmação do pagamento será feita manualmente pela equipe.</p>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-8 grid gap-5 rounded-lg bg-white p-5 shadow-soft sm:p-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 grid gap-5 rounded-lg bg-white p-4 shadow-soft sm:mt-8 sm:p-8">
           {error && <div className="rounded-md border border-error/20 bg-error/5 p-3 text-sm text-error">{error}</div>}
 
           <div className="grid gap-4 sm:grid-cols-2">
@@ -83,8 +82,8 @@ export function RegistrationPage() {
           </div>
 
           <div className="rounded-lg border border-slate-100 bg-background p-4">
-            <label className="flex items-center gap-3 font-semibold text-dark">
-              <input type="checkbox" className="h-4 w-4 accent-primary" {...register('wantsShirt')} />
+            <label className="flex items-start gap-3 font-semibold leading-6 text-dark">
+              <input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-primary" {...register('wantsShirt')} />
               Deseja comprar camiseta oficial?
             </label>
             {wantsShirt && (
@@ -111,20 +110,6 @@ export function RegistrationPage() {
                 </Field>
                 <Field label="Quantidade" error={errors.shirtQuantity?.message}>
                   <input className="field" type="number" min={1} max={10} {...register('shirtQuantity')} />
-                </Field>
-              </div>
-            )}
-          </div>
-
-          <div className="rounded-lg border border-slate-100 bg-background p-4">
-            <label className="flex items-center gap-3 font-semibold text-dark">
-              <input type="checkbox" className="h-4 w-4 accent-primary" {...register('wantsButton')} />
-              Deseja comprar botton oficial?
-            </label>
-            {wantsButton && (
-              <div className="mt-4 max-w-xs">
-                <Field label="Quantidade" error={errors.buttonQuantity?.message}>
-                  <input className="field" type="number" min={1} max={20} {...register('buttonQuantity')} />
                 </Field>
               </div>
             )}

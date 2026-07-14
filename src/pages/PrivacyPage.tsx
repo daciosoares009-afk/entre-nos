@@ -1,8 +1,8 @@
 export function PrivacyPage() {
   return (
-    <section className="container-page py-12">
-      <article className="mx-auto max-w-3xl rounded-lg bg-white p-6 leading-7 shadow-soft sm:p-8">
-        <h1 className="text-3xl font-bold text-dark">Política de Privacidade</h1>
+    <section className="container-page py-8 sm:py-12">
+      <article className="mx-auto max-w-3xl rounded-lg bg-white p-4 leading-7 shadow-soft sm:p-8">
+        <h1 className="text-2xl font-bold leading-tight text-dark sm:text-3xl">Política de Privacidade</h1>
         <p className="mt-4 text-muted">
           Esta versão inicial coleta apenas os dados necessários para inscrição, comunicação, confirmação manual de pagamento e organização do evento.
         </p>

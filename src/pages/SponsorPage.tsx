@@ -31,15 +31,15 @@ export function SponsorPage() {
   }
 
   return (
-    <section className="container-page py-12">
+    <section className="container-page py-8 sm:py-12">
       <div className="mx-auto max-w-3xl">
         <p className="text-sm font-bold uppercase tracking-wide text-primary">Patrocínio</p>
-        <h1 className="mt-2 text-3xl font-bold text-dark sm:text-4xl">Apoie o Entre Nós Experience</h1>
-        <p className="mt-3 text-muted">Envie sua proposta de apoio. A equipe entrará em contato para alinhar os próximos passos.</p>
+        <h1 className="mt-2 text-2xl font-bold leading-tight text-dark sm:text-4xl">Apoie o Entre Nós Experience</h1>
+        <p className="mt-3 text-sm leading-6 text-muted sm:text-base">Envie sua proposta de apoio. A equipe entrará em contato para alinhar os próximos passos.</p>
 
         {submitted && <div className="mt-6 rounded-md border border-success/20 bg-success/10 p-4 text-success">Solicitação registrada. Nossa equipe entrará em contato.</div>}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-8 grid gap-5 rounded-lg bg-white p-5 shadow-soft sm:p-8">
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-6 grid gap-5 rounded-lg bg-white p-4 shadow-soft sm:mt-8 sm:p-8">
           {error && <div className="rounded-md border border-error/20 bg-error/5 p-3 text-sm text-error">{error}</div>}
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Nome da empresa" error={errors.companyName?.message}>

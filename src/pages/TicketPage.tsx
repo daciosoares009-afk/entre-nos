@@ -31,8 +31,8 @@ export function TicketPage() {
   const ticketUrl = `${env.publicSiteUrl}/ingresso/${codigo ?? ''}`;
 
   return (
-    <section className="container-page py-12">
-      <div className="mx-auto max-w-2xl rounded-lg bg-white p-6 shadow-soft sm:p-8">
+    <section className="container-page py-8 sm:py-12">
+      <div className="mx-auto max-w-2xl rounded-lg bg-white p-4 shadow-soft sm:p-8">
         {loading && (
           <div className="flex items-center gap-3 text-muted">
             <Loader2 className="animate-spin" /> Carregando ingresso...
@@ -52,13 +52,13 @@ export function TicketPage() {
         {ticket && (
           <>
             <div className="flex flex-col gap-6 sm:flex-row sm:items-start sm:justify-between">
-              <div>
+              <div className="min-w-0">
                 <p className="text-sm font-bold uppercase tracking-wide text-primary">Ingresso digital</p>
-                <h1 className="mt-2 text-3xl font-bold text-dark">{eventInfo.name}</h1>
+                <h1 className="mt-2 break-words text-2xl font-bold leading-tight text-dark sm:text-3xl">{eventInfo.name}</h1>
                 <p className="mt-2 text-muted">{ticket.name}</p>
               </div>
-              <div className="rounded-md border border-slate-100 bg-white p-3">
-                <QRCodeSVG value={ticketUrl} size={144} />
+              <div className="w-fit max-w-full self-center rounded-md border border-slate-100 bg-white p-3 sm:self-auto">
+                <QRCodeSVG value={ticketUrl} size={144} className="h-auto max-w-full" />
               </div>
             </div>
 
@@ -84,9 +84,9 @@ export function TicketPage() {
 
 function Info({ label, value }: { label: string; value: string }) {
   return (
-    <div>
+    <div className="min-w-0">
       <p className="text-muted">{label}</p>
-      <p className="font-semibold text-dark">{value}</p>
+      <p className="break-words font-semibold text-dark">{value}</p>
     </div>
   );
 }

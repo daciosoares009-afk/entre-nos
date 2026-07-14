@@ -21,21 +21,21 @@ export const eventCards = [
 
 export const speakers = [
   {
-    name: 'Elisângela',
+    name: 'Elisângela Silva',
     role: 'Secretária da Mulher',
     status: 'Confirmada',
     initials: 'EL',
     image: speakerElizangela,
   },
   {
-    name: 'Carla Patrícia',
+    name: 'Carlla Patrícia',
     role: 'Professora e integrante da Sala do Empreendedor',
     status: 'Confirmada',
     initials: 'CP',
     image: speakerCarla,
   },
   {
-    name: 'Kelciodiones',
+    name: 'Kelciodione Alves',
     role: 'Alfa Consultorias e Secretário da Cultura',
     status: 'Confirmado',
     initials: 'KE',
@@ -44,9 +44,17 @@ export const speakers = [
 ];
 
 export const schedule = [
-  { time: '19h', title: 'Abertura do evento' },
-  { time: '19h15 às 20h30', title: 'Palestras com os especialistas' },
-  { time: '20h30', title: 'Anúncio do lançamento da plataforma oficial do Entre Nós' },
-  { time: '20h45', title: 'Anúncio da segunda temporada do Entre Nós Podcast' },
-  { time: '21h', title: 'Encerramento e networking' },
+  {
+    time: '19h00 – 19h15',
+    title: 'Abertura Oficial do Evento',
+    details: [
+      'Recepção do público',
+      'Apresentação inicial da equipe Entre Nós',
+      'Boas-vindas e apresentação do propósito do evento',
+    ],
+  },
+  { time: '19h15 – 20h15', title: 'Ciclo de Palestras' },
+  { time: '20h15 – 20h25', title: 'Anúncio Oficial da Nova Temporada do Entre Nós Podcast' },
+  { time: '20h25 – 20h45', title: 'Lançamento Oficial do Aplicativo Entre Nós' },
+  { time: '20h45 – 21h00', title: 'Encerramento e Agradecimentos' },
 ];
