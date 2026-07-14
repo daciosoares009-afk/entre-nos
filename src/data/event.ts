@@ -1,6 +1,6 @@
 import { CalendarDays, Clock, MapPin, Sparkles } from 'lucide-react';
 import speakerCarla from '../assets/speaker-carla.jpeg';
-import speakerElizangela from '../assets/speaker-elizangela.jpeg';
+import speakerElizangela from '../assets/speaker-elizangela.png';
 import speakerKelciodiones from '../assets/speaker-kelciodiones.jpeg';
 
 export const eventInfo = {

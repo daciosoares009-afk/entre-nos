@@ -152,11 +152,11 @@ export function RegistrationPage() {
 
           <div className="grid gap-3 text-sm">
             <Checkbox error={errors.acceptedTerms?.message} register={register('acceptedTerms')}>
-              Aceito os <Link className="font-semibold text-primary underline underline-offset-2" to="/termos" target="_blank" onClick={(event) => event.stopPropagation()}>Termos de Uso</Link>.
+              Aceito os <Link className="font-semibold text-primary underline underline-offset-2" to="/termos" onClick={(event) => event.stopPropagation()}>Termos de Uso</Link>.
             </Checkbox>
             <Checkbox label="Autorizo o uso de imagem em registros do evento." register={register('imageAuthorization')} />
             <Checkbox error={errors.privacyConsent?.message} register={register('privacyConsent')}>
-              Consinto com o tratamento dos meus dados conforme a <Link className="font-semibold text-primary underline underline-offset-2" to="/privacidade" target="_blank" onClick={(event) => event.stopPropagation()}>LGPD e a Política de Privacidade</Link>.
+              Consinto com o tratamento dos meus dados conforme a <Link className="font-semibold text-primary underline underline-offset-2" to="/privacidade" onClick={(event) => event.stopPropagation()}>LGPD e a Política de Privacidade</Link>.
             </Checkbox>
           </div>
 
@@ -182,9 +182,11 @@ function Field({ label, error, children }: { label: string; error?: string; chil
 
 function ProductInterest({ title, description, image, price, checked, checkbox, quantity, quantityError }: { title: string; description: string; image: string; price: number; checked: boolean; checkbox: UseFormRegisterReturn; quantity: UseFormRegisterReturn; quantityError?: string }) {
   return (
-    <article className="overflow-hidden rounded-lg border border-slate-200 bg-background">
-      <img src={image} alt={title} className="aspect-[4/3] w-full bg-white object-cover" />
-      <div className="p-4">
+    <article className="isolate overflow-hidden rounded-lg border border-slate-200 bg-background">
+      <div className="relative z-0 aspect-[4/3] overflow-hidden bg-white">
+        <img src={image} alt={title} className="block h-full w-full object-cover" />
+      </div>
+      <div className="relative z-10 bg-background p-4">
         <label className="flex cursor-pointer items-start gap-3 font-semibold text-dark">
           <input type="checkbox" className="mt-1 h-4 w-4 shrink-0 accent-primary" {...checkbox} />
           <span>{title}</span>

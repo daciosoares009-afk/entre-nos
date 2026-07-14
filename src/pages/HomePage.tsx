@@ -186,11 +186,11 @@ export function HomePage() {
 
 function ProductCard({ title, image, price, description = 'Tamanhos PP, P, M, G, GG e XGG.', showSizes = true }: { title: string; image: string; price?: number; description?: string; showSizes?: boolean }) {
   return (
-    <article className="overflow-hidden rounded-lg border border-slate-100 bg-background">
-      <div className="grid h-56 place-items-center bg-white p-3">
-        <img src={image} alt={title} className="h-full w-full rounded-md object-contain" />
+    <article className="isolate overflow-hidden rounded-lg border border-slate-100 bg-background">
+      <div className="relative z-0 grid h-56 place-items-center overflow-hidden bg-white p-3">
+        <img src={image} alt={title} className="block h-full w-full rounded-md object-contain" />
       </div>
-      <div className="p-6">
+      <div className="relative z-10 bg-background p-6">
         <h3 className="text-xl font-bold text-dark">{title}</h3>
         <p className="mt-2 text-sm leading-6 text-muted">{description}</p>
         <p className="mt-4 text-2xl font-bold text-primary">{price === undefined ? 'Valor em breve' : formatCurrency(price)}</p>
