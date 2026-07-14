@@ -1,7 +1,7 @@
 import { Menu, X } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
-import logoEntreNos from '../../assets/logo-entre-nos-experience-neon.jpeg';
+import logoEntreNos from '../../assets/logo-entre-nos-experience-transparent.png';
 
 const navItems = [
   { label: 'Evento', href: '/#evento' },

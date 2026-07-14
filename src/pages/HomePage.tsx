@@ -1,6 +1,7 @@
 import { ArrowRight, BadgeCheck, CalendarDays, Check, Handshake, Ticket } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import logoExperience from '../assets/logo-entre-nos-experience-neon.jpeg';
+import logoExperience from '../assets/logo-entre-nos-experience-transparent.png';
+import eventPromo from '../assets/event-promo.MOV';
 import shirtBlack from '../assets/shirt-black.jpeg';
 import shirtWhite from '../assets/shirt-white.jpeg';
 import { eventCards, eventInfo, schedule, speakers } from '../data/event';
@@ -52,6 +53,27 @@ export function HomePage() {
                 ))}
               </div>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="video" className="bg-background py-16">
+        <div className="container-page grid items-center gap-8 lg:grid-cols-[0.85fr_1.15fr]">
+          <div>
+            <SectionTitle
+              eyebrow="Viva a experiência"
+              title="Um encontro para conectar ideias e pessoas"
+              description="Assista ao vídeo oficial e conheça o clima do Entre Nós Experience antes de fazer sua inscrição."
+            />
+            <Link to="/inscricao" className="btn-primary mt-6">
+              Quero participar <ArrowRight size={18} />
+            </Link>
+          </div>
+          <div className="overflow-hidden rounded-lg bg-dark p-2 shadow-soft">
+            <video className="aspect-video w-full rounded-md object-cover" controls playsInline preload="metadata">
+              <source src={eventPromo} type="video/quicktime" />
+              Seu navegador não consegue reproduzir este vídeo. Abra o arquivo pelo dispositivo para assistir.
+            </video>
           </div>
         </div>
       </section>

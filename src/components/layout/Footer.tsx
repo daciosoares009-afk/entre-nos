@@ -1,7 +1,7 @@
 import { Instagram, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { env } from '../../config/env';
-import logoEntreNos from '../../assets/logo-entre-nos-experience-neon.jpeg';
+import logoEntreNos from '../../assets/logo-entre-nos-experience-transparent.png';
 
 export function Footer() {
   return (
