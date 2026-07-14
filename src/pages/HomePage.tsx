@@ -155,8 +155,8 @@ export function HomePage() {
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
             <ProductCard title="Camiseta branca" image={shirtWhite} price={productConfig.shirtPrice} />
             <ProductCard title="Camiseta preta" image={shirtBlack} price={productConfig.shirtPrice} />
-            <ProductCard title="Copo acrílico" image={productCopoAcrilico} price={productConfig.cupPrice} description="Resistente, leve e desenvolvido especialmente para o evento." />
-            <ProductCard title="Caneca oficial" image={productCaneca} price={productConfig.mugPrice} description="Caneca de cerâmica com design exclusivo Entre Nós Experience." />
+            <ProductCard title="Copo acrílico" image={productCopoAcrilico} price={productConfig.cupPrice} description="Resistente, leve e desenvolvido especialmente para o evento." showSizes={false} />
+            <ProductCard title="Caneca oficial" image={productCaneca} price={productConfig.mugPrice} description="Caneca de cerâmica com design exclusivo Entre Nós Experience." showSizes={false} />
           </div>
           <div className="mt-8 flex justify-center">
             <Link to="/inscricao" className="btn-primary">
@@ -184,7 +184,7 @@ export function HomePage() {
   );
 }
 
-function ProductCard({ title, image, price, description = 'Tamanhos PP, P, M, G, GG e XGG.' }: { title: string; image: string; price?: number; description?: string }) {
+function ProductCard({ title, image, price, description = 'Tamanhos PP, P, M, G, GG e XGG.', showSizes = true }: { title: string; image: string; price?: number; description?: string; showSizes?: boolean }) {
   return (
     <article className="overflow-hidden rounded-lg border border-slate-100 bg-background">
       <div className="grid h-56 place-items-center bg-white p-3">
@@ -194,7 +194,7 @@ function ProductCard({ title, image, price, description = 'Tamanhos PP, P, M, G,
         <h3 className="text-xl font-bold text-dark">{title}</h3>
         <p className="mt-2 text-sm leading-6 text-muted">{description}</p>
         <p className="mt-4 text-2xl font-bold text-primary">{price === undefined ? 'Valor em breve' : formatCurrency(price)}</p>
-        {price !== undefined && (
+        {showSizes && (
           <div className="mt-4 flex flex-wrap gap-2">
             {productConfig.shirtSizes.map((size) => (
               <span key={size} className="rounded-md border border-slate-200 bg-white px-2 py-1 text-xs font-semibold text-muted">
