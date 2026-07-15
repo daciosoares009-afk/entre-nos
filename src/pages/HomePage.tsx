@@ -4,7 +4,6 @@ import logoExperience from '../assets/logo-entre-nos-experience-transparent.png'
 import eventPromo from '../assets/event-promo.mp4';
 import productCaneca from '../assets/product-caneca.jpeg';
 import productCopoAcrilico from '../assets/product-copo-acrilico.jpeg';
-import programacaoDestaque from '../assets/programacao-destaque.png';
 import shirtBlack from '../assets/shirt-black.jpeg';
 import shirtWhite from '../assets/shirt-white.jpeg';
 import { eventCards, eventInfo, schedule, speakers } from '../data/event';
@@ -23,6 +22,10 @@ export function HomePage() {
             </div>
             <h1 className="break-words text-3xl font-extrabold leading-tight text-dark sm:text-5xl lg:text-6xl">{eventInfo.name}</h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-muted sm:mt-5 sm:text-lg sm:leading-8">{eventInfo.description}</p>
+            <div className="mt-5 max-w-2xl rounded-lg border border-primary/15 bg-primary/5 p-4 sm:p-5">
+              <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-primary">Tema</p>
+              <p className="mt-2 text-base font-bold leading-7 text-dark sm:text-lg">{eventInfo.theme}</p>
+            </div>
             <div className="mt-6 grid gap-2 text-sm font-semibold text-text min-[480px]:grid-cols-3 sm:gap-3">
               <span>Data: {eventInfo.date}</span>
               <span>Horário: {eventInfo.time}</span>
@@ -119,8 +122,7 @@ export function HomePage() {
 
       <section id="programacao" className="container-page py-12 sm:py-16">
         <SectionTitle eyebrow="Programação" title="Linha do tempo do evento" />
-        <div className="mx-auto grid max-w-5xl items-start gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div>
+        <div className="mx-auto max-w-3xl">
             {schedule.map((item, index) => (
               <div key={item.time} className="grid grid-cols-[82px_minmax(0,1fr)] gap-3 sm:grid-cols-[150px_minmax(0,1fr)] sm:gap-4">
                 <div className="break-words text-right text-xs font-bold text-primary sm:text-sm">{item.time}</div>
@@ -141,11 +143,6 @@ export function HomePage() {
                 </div>
               </div>
             ))}
-          </div>
-          <figure className="overflow-hidden rounded-lg border border-slate-100 bg-white shadow-soft lg:sticky lg:top-24">
-            <img src={programacaoDestaque} alt="Registro de participante em evento" className="aspect-[4/5] w-full object-cover" />
-            <figcaption className="p-4 text-center text-sm font-semibold text-muted">Conexões que inspiram e transformam</figcaption>
-          </figure>
         </div>
       </section>
 

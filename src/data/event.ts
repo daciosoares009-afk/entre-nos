@@ -10,6 +10,7 @@ export const eventInfo = {
   location: 'A definir',
   description:
     'Um encontro para conectar mulheres, empreendedores, especialistas e marcas em uma noite de conteúdo, networking e novos lançamentos do Entre Nós.',
+  theme: 'A força da juventude e o protagonismo feminino na construção de um novo amanhã.',
 };
 
 export const eventCards = [
