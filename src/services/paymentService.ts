@@ -7,7 +7,14 @@ export async function createMercadoPagoCheckout(registrationNumber: string, tick
     body: { registrationNumber, ticketCode },
   });
 
-  if (error) throw new Error(error.message || 'Não foi possível iniciar o pagamento.');
+  if (error) {
+    const response = (error as { context?: Response }).context;
+    if (response) {
+      const payload = await response.clone().json().catch(() => null) as { error?: string } | null;
+      if (payload?.error) throw new Error(payload.error);
+    }
+    throw new Error('Não foi possível iniciar o pagamento. Tente novamente em alguns instantes.');
+  }
   if (!data?.checkoutUrl) throw new Error(data?.error || 'Link de pagamento não recebido.');
   return data.checkoutUrl as string;
 }

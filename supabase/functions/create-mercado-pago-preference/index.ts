@@ -79,8 +79,22 @@ Deno.serve(async (request) => {
 
     const preference = await preferenceResponse.json();
     if (!preferenceResponse.ok || !preference.id || !preference.init_point) {
-      console.error('Mercado Pago preference error', preference);
-      return json({ error: 'Não foi possível iniciar o pagamento.' }, 502);
+      console.error('Mercado Pago preference error', {
+        status: preferenceResponse.status,
+        error: preference?.error,
+        message: preference?.message,
+        cause: Array.isArray(preference?.cause) ? preference.cause.map((item: { code?: string }) => item?.code).filter(Boolean) : [],
+      });
+
+      if (preferenceResponse.status === 401 || preferenceResponse.status === 403) {
+        return json({ error: 'A credencial do Mercado Pago está inválida ou sem permissão. Use o Access Token do vendedor.' }, 502);
+      }
+
+      if (preferenceResponse.status === 400) {
+        return json({ error: 'O Mercado Pago recusou os dados do checkout. Confira o Access Token do vendedor e tente novamente.' }, 502);
+      }
+
+      return json({ error: 'O Mercado Pago não conseguiu criar a cobrança neste momento. Tente novamente em alguns instantes.' }, 502);
     }
 
     const { error: updateError } = await supabase.from('registrations').update({ mercado_pago_preference_id: preference.id, total_amount: serverTotal }).eq('registration_number', registration.registration_number);

@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Loader2, QrCode } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Loader2, QrCode, ShieldCheck, ShieldX, UserRound } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -29,6 +29,8 @@ export function TicketPage() {
   }, [codigo]);
 
   const ticketUrl = `${env.publicSiteUrl}/ingresso/${codigo ?? ''}`;
+  const isPaid = ticket?.payment_status === 'paid';
+  const isValid = Boolean(ticket && isPaid && !ticket.checked_in);
 
   return (
     <section className="container-page py-8 sm:py-12">
@@ -55,7 +57,12 @@ export function TicketPage() {
               <div className="min-w-0">
                 <p className="text-sm font-bold uppercase tracking-wide text-primary">Ingresso digital</p>
                 <h1 className="mt-2 break-words text-2xl font-bold leading-tight text-dark sm:text-3xl">{eventInfo.name}</h1>
-                <p className="mt-2 text-muted">{ticket.name}</p>
+                <div className="mt-4 rounded-md border border-primary/20 bg-primary/5 p-3">
+                  <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-primary">
+                    <UserRound size={16} /> Titular do ingresso
+                  </p>
+                  <p className="mt-1 break-words text-xl font-extrabold text-dark">{ticket.name}</p>
+                </div>
               </div>
               <div className="w-fit max-w-full self-center rounded-md border border-slate-100 bg-white p-3 sm:self-auto">
                 <QRCodeSVG value={ticketUrl} size={144} className="h-auto max-w-full" />
@@ -71,9 +78,26 @@ export function TicketPage() {
               <Info label="Entrada" value={ticket.checked_in ? 'Entrada registrada' : 'Não registrada'} />
             </div>
 
-            <div className={`mt-6 flex items-center gap-3 rounded-md p-4 ${ticket.payment_status === 'paid' ? 'bg-success/10 text-success' : 'bg-warning/10 text-text'}`}>
-              {ticket.payment_status === 'paid' ? <CheckCircle2 /> : <AlertCircle />}
-              <span className="font-semibold">{ticket.payment_status === 'paid' ? 'Ingresso confirmado' : 'Aguardando confirmação'}</span>
+            <div
+              className={`mt-6 rounded-lg border-2 p-5 text-center ${isValid ? 'border-success bg-success/10 text-success' : 'border-error bg-error/5 text-error'}`}
+              role="status"
+            >
+              {isValid ? <ShieldCheck className="mx-auto" size={52} /> : <ShieldX className="mx-auto" size={52} />}
+              <p className="mt-3 text-2xl font-extrabold sm:text-3xl">
+                {isValid ? 'INGRESSO VÁLIDO' : ticket.checked_in ? 'INGRESSO JÁ UTILIZADO' : 'INGRESSO INVÁLIDO'}
+              </p>
+              <p className="mt-2 text-sm font-semibold">
+                {isValid
+                  ? 'Pagamento aprovado. Confira o nome do titular antes de autorizar a entrada.'
+                  : ticket.checked_in
+                    ? 'A entrada deste ingresso já foi registrada.'
+                    : 'Pagamento ainda não aprovado. Entrada não autorizada.'}
+              </p>
+            </div>
+
+            <div className={`mt-4 flex items-center gap-3 rounded-md p-4 ${isPaid ? 'bg-success/10 text-success' : 'bg-warning/10 text-text'}`}>
+              {isPaid ? <CheckCircle2 /> : <AlertCircle />}
+              <span className="font-semibold">{isPaid ? 'Pagamento confirmado' : 'Aguardando confirmação do pagamento'}</span>
             </div>
           </>
         )}
