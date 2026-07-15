@@ -1,42 +1,41 @@
+import { Instagram } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { env } from '../../config/env';
-import logoInstagram from '../../assets/logo-instagram.png';
 import logoEntreNos from '../../assets/logo-entre-nos-experience-transparent.png';
-import logoWhatsApp from '../../assets/logo-whatsapp.png';
+import { WhatsAppIcon } from '../ui/WhatsAppIcon';
 
 export function Footer() {
   return (
-    <footer className="border-t border-slate-100 bg-white">
-      <div className="container-page grid gap-7 py-8 sm:py-10 md:grid-cols-[1fr_auto]">
-        <div>
-          <div className="mb-3 inline-flex max-w-full rounded-md py-2 font-bold text-dark sm:p-3">
-            <img
-              src={logoEntreNos}
-              alt="Entre Nós Experience"
-              className="h-16 w-48 rounded-sm object-contain sm:h-20 sm:w-56"
-            />
-          </div>
-          <p className="max-w-xl text-sm text-muted">
-            MVP para divulgação do evento, inscrições, produtos oficiais e captação de patrocinadores.
-          </p>
-        </div>
-        <div className="grid grid-cols-2 items-center gap-4 text-sm sm:flex sm:flex-wrap md:max-w-sm md:justify-end">
-          <a className="inline-flex items-center gap-2 text-muted hover:text-primary" href={`https://instagram.com/${env.instagramUsername}`} target="_blank" rel="noreferrer">
-            <img src={logoInstagram} alt="" className="h-5 w-5 shrink-0 rounded object-cover" /> @{env.instagramUsername}
+    <footer className="border-t border-slate-200 bg-white">
+      <div className="container-page flex flex-col items-center gap-5 py-6 lg:flex-row lg:justify-between lg:gap-6">
+        <Link to="/" className="shrink-0 rounded-md focus:outline-none focus:ring-2 focus:ring-primary/30">
+          <img src={logoEntreNos} alt="Entre Nós Experience" className="h-12 w-40 object-contain" />
+        </Link>
+
+        <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-3 text-[13px] font-semibold text-muted" aria-label="Links do rodapé">
+          <a className="inline-flex whitespace-nowrap items-center gap-2 transition hover:text-primary" href={`https://instagram.com/${env.instagramUsername}`} target="_blank" rel="noreferrer">
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-gradient-to-br from-violet-600 via-pink-500 to-amber-400 text-white shadow-sm">
+              <Instagram size={18} strokeWidth={2.2} />
+            </span>
+            @{env.instagramUsername}
           </a>
-          <a className="inline-flex items-center gap-2 text-muted hover:text-primary" href={`https://wa.me/${env.whatsappNumber}`} target="_blank" rel="noreferrer">
-            <img src={logoWhatsApp} alt="" className="h-5 w-5 shrink-0 rounded-sm object-cover" /> WhatsApp
+          <a className="inline-flex whitespace-nowrap items-center gap-2 transition hover:text-primary" href={`https://wa.me/${env.whatsappNumber}`} target="_blank" rel="noreferrer">
+            <span className="grid h-8 w-8 place-items-center rounded-full bg-[#25D366] text-white shadow-sm">
+              <WhatsAppIcon className="h-[18px] w-[18px]" />
+            </span>
+            WhatsApp
           </a>
-          <Link className="text-muted hover:text-primary" to="/privacidade">
+          <Link className="whitespace-nowrap transition hover:text-primary" to="/privacidade">
             Privacidade
           </Link>
-          <Link className="text-muted hover:text-primary" to="/termos">
+          <Link className="whitespace-nowrap transition hover:text-primary" to="/termos">
             Termos
           </Link>
-        </div>
-      </div>
-      <div className="border-t border-slate-100 px-4 py-4 text-center text-xs leading-5 text-muted">
-        © {new Date().getFullYear()} Entre Nós Experience. Todos os direitos reservados.
+        </nav>
+
+        <p className="shrink-0 text-center text-xs leading-5 text-muted lg:text-right">
+          © {new Date().getFullYear()} Entre Nós Experience
+        </p>
       </div>
     </footer>
   );

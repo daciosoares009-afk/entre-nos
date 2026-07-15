@@ -84,7 +84,11 @@ export function SuccessPage() {
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <button type="button" onClick={handlePayment} disabled={paymentLoading} className="btn-primary">
             {paymentLoading && <Loader2 className="animate-spin" size={18} />}
-            {!paymentLoading && <img src={logoPix} alt="" className="h-5 w-5 shrink-0 object-contain" />}
+            {!paymentLoading && (
+              <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white shadow-sm">
+                <img src={logoPix} alt="" className="h-[18px] w-[18px] object-contain" />
+              </span>
+            )}
             Pagar com Pix
           </button>
           <a href={`https://wa.me/${env.whatsappNumber}?text=${whatsappMessage}`} target="_blank" rel="noreferrer" className="btn-secondary">
