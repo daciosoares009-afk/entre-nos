@@ -6,6 +6,17 @@ const corsHeaders = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 const prices = { ticket: 15, shirt: 45, cup: 12, mug: 40 };
+const defaultSiteUrl = 'https://entre-nos-eta.vercel.app';
+
+function getPublicSiteOrigin(value: string | undefined) {
+  try {
+    const url = new URL(value || defaultSiteUrl);
+    if (url.protocol !== 'https:') return defaultSiteUrl;
+    return url.origin;
+  } catch {
+    return defaultSiteUrl;
+  }
+}
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -24,7 +35,7 @@ Deno.serve(async (request) => {
 
   try {
     const accessToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
-    const siteUrl = (Deno.env.get('PUBLIC_SITE_URL') || '').replace(/\/$/, '');
+    const siteUrl = getPublicSiteOrigin(Deno.env.get('PUBLIC_SITE_URL'));
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceRoleKey = getServiceRoleKey();
     if (!accessToken || !siteUrl || !supabaseUrl || !serviceRoleKey) {
