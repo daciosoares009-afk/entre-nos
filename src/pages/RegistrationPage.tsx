@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2 } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm, type UseFormRegisterReturn } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import productCaneca from '../assets/product-caneca.jpeg';
@@ -20,6 +20,7 @@ export function RegistrationPage() {
     handleSubmit,
     watch,
     setValue,
+    getValues,
     formState: { errors, isSubmitting },
   } = useForm<RegistrationFormData>({
     resolver: zodResolver(registrationSchema),
@@ -35,12 +36,27 @@ export function RegistrationPage() {
       wantsMug: false,
       mugQuantity: 1,
       imageAuthorization: false,
+      ticketQuantity: 1,
+      additionalTicketNames: [],
     },
   });
 
   const wantsShirt = watch('wantsShirt');
   const wantsCup = watch('wantsCup');
   const wantsMug = watch('wantsMug');
+  const ticketQuantity = watch('ticketQuantity') ?? 1;
+
+  useEffect(() => {
+    const expectedNames = Math.max(0, ticketQuantity - 1);
+    const currentNames = getValues('additionalTicketNames') ?? [];
+    if (currentNames.length !== expectedNames) {
+      setValue(
+        'additionalTicketNames',
+        Array.from({ length: expectedNames }, (_, index) => currentNames[index] ?? ''),
+        { shouldValidate: false },
+      );
+    }
+  }, [getValues, setValue, ticketQuantity]);
 
   async function onSubmit(data: RegistrationFormData) {
     setError('');
@@ -64,7 +80,7 @@ export function RegistrationPage() {
           {error && <div className="rounded-md border border-error/20 bg-error/5 p-3 text-sm text-error">{error}</div>}
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Nome completo" error={errors.name?.message}>
+            <Field label="Nome completo (titular 1)" error={errors.name?.message}>
               <input className="field" {...register('name')} autoComplete="name" />
             </Field>
             <Field label="E-mail" error={errors.email?.message}>
@@ -89,13 +105,36 @@ export function RegistrationPage() {
             </Field>
           </div>
 
-          <div className="flex flex-col gap-2 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
+          <div className="grid gap-4 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:grid-cols-[1fr_180px] sm:items-end">
+            <div className="min-w-0">
               <h2 className="font-bold text-dark">Ingresso do evento</h2>
-              <p className="mt-1 text-sm text-muted">Incluído automaticamente em toda inscrição.</p>
+              <p className="mt-1 text-sm leading-6 text-muted">Escolha até 10 ingressos. Cada um terá nome, QR Code e PDF próprios.</p>
+              <p className="mt-2 text-xl font-extrabold text-primary">{formatCurrency(ticketQuantity * productConfig.ticketPrice)}</p>
+              <p className="mt-1 text-xs font-semibold text-muted">{ticketQuantity} × {formatCurrency(productConfig.ticketPrice)}</p>
             </div>
-            <p className="text-xl font-extrabold text-primary">{formatCurrency(productConfig.ticketPrice)}</p>
+            <Field label="Quantidade" error={errors.ticketQuantity?.message}>
+              <select className="field" {...register('ticketQuantity')}>
+                {Array.from({ length: 10 }, (_, index) => index + 1).map((quantity) => (
+                  <option key={quantity} value={quantity}>{quantity}</option>
+                ))}
+              </select>
+            </Field>
           </div>
+
+          {ticketQuantity > 1 && (
+            <div className="rounded-lg border border-slate-200 bg-white p-4 sm:p-5">
+              <h2 className="text-lg font-bold text-dark">Titulares dos demais ingressos</h2>
+              <p className="mt-1 text-sm leading-6 text-muted">Os nomes devem ser completos e diferentes do comprador e entre si.</p>
+              <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                {Array.from({ length: ticketQuantity - 1 }, (_, index) => (
+                  <Field key={index} label={`Nome completo (titular ${index + 2})`} error={errors.additionalTicketNames?.[index]?.message}>
+                    <input className="field" {...register(`additionalTicketNames.${index}` as const)} autoComplete="off" />
+                  </Field>
+                ))}
+              </div>
+              <FormError message={typeof errors.additionalTicketNames?.message === 'string' ? errors.additionalTicketNames.message : undefined} />
+            </div>
+          )}
 
           <div className="rounded-lg border border-slate-100 bg-background p-4">
             <label className="flex items-start gap-3 font-semibold leading-6 text-dark">

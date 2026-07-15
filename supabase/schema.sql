@@ -3,6 +3,8 @@ create extension if not exists pgcrypto;
 create table if not exists public.registrations (
   id uuid primary key default gen_random_uuid(),
   registration_number text not null unique,
+  order_number text not null,
+  is_order_owner boolean not null default true,
   name text not null check (char_length(name) between 3 and 120),
   email text not null,
   phone text not null,
@@ -32,8 +34,7 @@ create table if not exists public.registrations (
   image_authorization boolean not null default false,
   privacy_consent boolean not null check (privacy_consent = true),
   created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (email, phone)
+  updated_at timestamptz not null default now()
 );
 
 alter table public.registrations add column if not exists wants_cup boolean not null default false;
@@ -44,6 +45,43 @@ alter table public.registrations add column if not exists mercado_pago_preferenc
 alter table public.registrations add column if not exists mercado_pago_payment_id text;
 alter table public.registrations add column if not exists mercado_pago_status text;
 alter table public.registrations add column if not exists payment_updated_at timestamptz;
+alter table public.registrations add column if not exists order_number text;
+alter table public.registrations add column if not exists is_order_owner boolean not null default true;
+
+update public.registrations
+set order_number = registration_number
+where order_number is null or btrim(order_number) = '';
+
+alter table public.registrations alter column order_number set not null;
+
+alter table public.registrations drop constraint if exists registrations_email_phone_key;
+create unique index if not exists registrations_owner_email_phone_key
+on public.registrations (email, phone)
+where is_order_owner = true;
+create unique index if not exists registrations_order_owner_key
+on public.registrations (order_number)
+where is_order_owner = true;
+create unique index if not exists registrations_order_holder_name_key
+on public.registrations (order_number, lower(btrim(name)));
+create index if not exists registrations_order_number_idx
+on public.registrations (order_number);
+
+create or replace function public.set_registration_order_defaults()
+returns trigger
+language plpgsql
+as $$
+begin
+  if new.order_number is null or btrim(new.order_number) = '' then
+    new.order_number = new.registration_number;
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists registrations_order_defaults on public.registrations;
+create trigger registrations_order_defaults
+before insert on public.registrations
+for each row execute function public.set_registration_order_defaults();
 
 create table if not exists public.sponsor_requests (
   id uuid primary key default gen_random_uuid(),

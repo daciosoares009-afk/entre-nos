@@ -10,6 +10,7 @@ export const productConfig = {
 };
 
 export function calculateTotal(input: {
+  ticketQuantity?: number;
   wantsShirt?: boolean;
   shirtQuantity?: number;
   wantsButton?: boolean;
@@ -19,7 +20,7 @@ export function calculateTotal(input: {
   wantsMug?: boolean;
   mugQuantity?: number;
 }) {
-  const ticketTotal = productConfig.ticketPrice;
+  const ticketTotal = Math.max(1, input.ticketQuantity ?? 1) * productConfig.ticketPrice;
   const shirtTotal = input.wantsShirt ? (input.shirtQuantity ?? 1) * productConfig.shirtPrice : 0;
   const buttonTotal = input.wantsButton ? (input.buttonQuantity ?? 1) * productConfig.buttonPrice : 0;
   const cupTotal = input.wantsCup ? (input.cupQuantity ?? 1) * productConfig.cupPrice : 0;

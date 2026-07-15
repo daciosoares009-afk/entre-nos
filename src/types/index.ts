@@ -4,6 +4,12 @@ export type RegistrationSummary = {
   registrationNumber: string;
   ticketCode: string;
   name: string;
+  ticketQuantity: number;
+  tickets: Array<{
+    registrationNumber: string;
+    ticketCode: string;
+    name: string;
+  }>;
   wantsShirt: boolean;
   shirtColor?: 'branca' | 'preta' | '';
   shirtSize?: string;

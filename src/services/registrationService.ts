@@ -1,4 +1,4 @@
-import { calculateTotal } from '../data/products';
+import { calculateTotal, productConfig } from '../data/products';
 import type { RegistrationFormData } from '../schemas/registrationSchema';
 import { supabase } from './supabase';
 import { createRegistrationNumber, createTicketCode } from '../utils/ids';
@@ -11,40 +11,58 @@ export async function createRegistration(data: RegistrationFormData): Promise<Re
   }
 
   const registrationNumber = createRegistrationNumber();
-  const ticketCode = createTicketCode();
+  const holderNames = [data.name, ...data.additionalTicketNames].map(sanitizeText);
+  const tickets = holderNames.map((name, index) => ({
+    name,
+    registrationNumber: index === 0 ? registrationNumber : `${registrationNumber}-${index + 1}`,
+    ticketCode: createTicketCode(),
+  }));
+  const ticketCode = tickets[0].ticketCode;
   const totalAmount = calculateTotal(data);
 
-  const payload = {
-    registration_number: registrationNumber,
-    name: sanitizeText(data.name),
+  const commonPayload = {
     email: sanitizeText(data.email).toLowerCase(),
     phone: data.phone,
     age: data.age,
     city: sanitizeText(data.city),
     state: sanitizeText(data.state).toUpperCase(),
-    wants_shirt: data.wantsShirt,
-    shirt_color: data.wantsShirt ? data.shirtColor : null,
-    shirt_size: data.wantsShirt ? data.shirtSize : null,
-    shirt_quantity: data.wantsShirt ? data.shirtQuantity : 0,
-    wants_button: data.wantsButton,
-    button_quantity: data.wantsButton ? data.buttonQuantity : 0,
-    wants_cup: data.wantsCup,
-    cup_quantity: data.wantsCup ? data.cupQuantity : 0,
-    wants_mug: data.wantsMug,
-    mug_quantity: data.wantsMug ? data.mugQuantity : 0,
-    total_amount: totalAmount,
     payment_status: 'pending',
-    ticket_code: ticketCode,
     checked_in: false,
     accepted_terms: data.acceptedTerms,
     image_authorization: data.imageAuthorization,
     privacy_consent: data.privacyConsent,
   };
 
+  const payload = tickets.map((ticket, index) => {
+    const isOrderOwner = index === 0;
+    return {
+      ...commonPayload,
+      registration_number: ticket.registrationNumber,
+      order_number: registrationNumber,
+      is_order_owner: isOrderOwner,
+      name: ticket.name,
+      wants_shirt: isOrderOwner && data.wantsShirt,
+      shirt_color: isOrderOwner && data.wantsShirt ? data.shirtColor : null,
+      shirt_size: isOrderOwner && data.wantsShirt ? data.shirtSize : null,
+      shirt_quantity: isOrderOwner && data.wantsShirt ? data.shirtQuantity : 0,
+      wants_button: isOrderOwner && data.wantsButton,
+      button_quantity: isOrderOwner && data.wantsButton ? data.buttonQuantity : 0,
+      wants_cup: isOrderOwner && data.wantsCup,
+      cup_quantity: isOrderOwner && data.wantsCup ? data.cupQuantity : 0,
+      wants_mug: isOrderOwner && data.wantsMug,
+      mug_quantity: isOrderOwner && data.wantsMug ? data.mugQuantity : 0,
+      total_amount: isOrderOwner ? totalAmount : productConfig.ticketPrice,
+      ticket_code: ticket.ticketCode,
+    };
+  });
+
   const { error } = await supabase.from('registrations').insert(payload);
   if (error) {
-    if (error.code === '23505' && error.message.includes('registrations_email_phone_key')) {
+    if (error.code === '23505' && error.message.includes('registrations_owner_email_phone_key')) {
       throw new Error('Já existe uma inscrição com este e-mail e telefone. Use outros dados para uma nova inscrição ou entre em contato pelo WhatsApp para recuperar a inscrição existente.');
+    }
+    if (error.code === '23505' && error.message.includes('registrations_order_holder_name_key')) {
+      throw new Error('Todos os ingressos da compra precisam ter nomes de titulares diferentes.');
     }
     throw new Error('Não foi possível registrar a inscrição. Tente novamente em alguns instantes.');
   }
@@ -52,17 +70,19 @@ export async function createRegistration(data: RegistrationFormData): Promise<Re
   return {
     registrationNumber,
     ticketCode,
-    name: payload.name,
+    name: tickets[0].name,
+    ticketQuantity: tickets.length,
+    tickets,
     wantsShirt: data.wantsShirt,
     shirtColor: data.shirtColor,
     shirtSize: data.shirtSize,
-    shirtQuantity: payload.shirt_quantity,
+    shirtQuantity: payload[0].shirt_quantity,
     wantsButton: data.wantsButton,
-    buttonQuantity: payload.button_quantity,
+    buttonQuantity: payload[0].button_quantity,
     wantsCup: data.wantsCup,
-    cupQuantity: payload.cup_quantity,
+    cupQuantity: payload[0].cup_quantity,
     wantsMug: data.wantsMug,
-    mugQuantity: payload.mug_quantity,
+    mugQuantity: payload[0].mug_quantity,
     totalAmount,
   };
 }

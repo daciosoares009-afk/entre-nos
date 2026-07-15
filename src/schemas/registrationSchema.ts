@@ -9,6 +9,8 @@ export const registrationSchema = z
     age: z.coerce.number().int().min(12, 'Idade mínima: 12 anos.').max(120),
     city: z.string().min(2, 'Informe sua cidade.').max(80),
     state: z.string().min(2, 'Informe seu estado.').max(2, 'Use a sigla do estado.'),
+    ticketQuantity: z.coerce.number().int().min(1).max(10).default(1),
+    additionalTicketNames: z.array(z.string().min(3, 'Informe o nome completo do titular.').max(120)).max(9).default([]),
     wantsShirt: z.boolean().default(false),
     shirtColor: z.enum(productConfig.shirtColors).optional().or(z.literal('')),
     shirtSize: z.enum(productConfig.shirtSizes).optional().or(z.literal('')),
@@ -24,6 +26,16 @@ export const registrationSchema = z
     privacyConsent: z.literal(true, { errorMap: () => ({ message: 'O consentimento LGPD é obrigatório.' }) }),
   })
   .superRefine((data, ctx) => {
+    const expectedAdditionalNames = data.ticketQuantity - 1;
+    if (data.additionalTicketNames.length !== expectedAdditionalNames) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['additionalTicketNames'], message: 'Informe o nome de todos os titulares.' });
+    }
+
+    const normalizedNames = [data.name, ...data.additionalTicketNames].map((name) => name.trim().replace(/\s+/g, ' ').toLocaleLowerCase('pt-BR'));
+    if (new Set(normalizedNames).size !== normalizedNames.length) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['additionalTicketNames'], message: 'Cada ingresso deve ter um titular diferente.' });
+    }
+
     if (data.wantsShirt && !data.shirtColor) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['shirtColor'], message: 'Escolha a cor da camiseta.' });
     }

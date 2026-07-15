@@ -65,22 +65,23 @@ Deno.serve(async (request) => {
     if (!paymentResponse.ok) return new Response('payment lookup failed', { status: 502 });
 
     const payment = await paymentResponse.json();
-    const registrationNumber = String(payment.external_reference || '');
-    if (!registrationNumber) return new Response('ok', { status: 200 });
+    const orderNumber = String(payment.external_reference || '');
+    if (!orderNumber) return new Response('ok', { status: 200 });
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
-    const { data: registration, error: lookupError } = await supabase
+    const { data: orderRegistrations, error: lookupError } = await supabase
       .from('registrations')
-      .select('wants_shirt,shirt_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity')
-      .eq('registration_number', registrationNumber)
-      .single();
-    if (lookupError || !registration) return new Response('registration not found', { status: 404 });
+      .select('is_order_owner,wants_shirt,shirt_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity')
+      .eq('order_number', orderNumber);
+    if (lookupError || !orderRegistrations?.length) return new Response('registration not found', { status: 404 });
+
+    const orderOwner = orderRegistrations.find((item) => item.is_order_owner) || orderRegistrations[0];
 
     const expectedAmount =
-      15 +
-      (registration.wants_shirt ? registration.shirt_quantity * 45 : 0) +
-      (registration.wants_cup ? registration.cup_quantity * 12 : 0) +
-      (registration.wants_mug ? registration.mug_quantity * 40 : 0);
+      orderRegistrations.length * 15 +
+      (orderOwner.wants_shirt ? orderOwner.shirt_quantity * 45 : 0) +
+      (orderOwner.wants_cup ? orderOwner.cup_quantity * 12 : 0) +
+      (orderOwner.wants_mug ? orderOwner.mug_quantity * 40 : 0);
     const receivedAmount = Number(payment.transaction_amount);
     const amountMatches = Math.abs(expectedAmount - receivedAmount) < 0.01;
     const status = amountMatches ? mapPaymentStatus(String(payment.status)) : 'under_review';
@@ -93,7 +94,7 @@ Deno.serve(async (request) => {
         mercado_pago_status: String(payment.status),
         payment_updated_at: new Date().toISOString(),
       })
-      .eq('registration_number', registrationNumber);
+      .eq('order_number', orderNumber);
 
     if (updateError) return new Response('database update failed', { status: 500 });
     return new Response('ok', { status: 200 });

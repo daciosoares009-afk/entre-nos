@@ -55,7 +55,10 @@ export function SuccessPage() {
   const whatsappMessage = encodeURIComponent(
     `Olá! Enviei o comprovante do Entre Nós Experience. Inscrição: ${summary.registrationNumber}`,
   );
-  const currentTotal = calculateTotal(summary);
+  const tickets = summary.tickets?.length
+    ? summary.tickets
+    : [{ registrationNumber: summary.registrationNumber, ticketCode: summary.ticketCode, name: summary.name }];
+  const currentTotal = calculateTotal({ ...summary, ticketQuantity: summary.ticketQuantity ?? tickets.length });
 
   return (
     <section className="container-page py-8 sm:py-12">
@@ -74,10 +77,17 @@ export function SuccessPage() {
           <p className="text-sm text-muted">Número da inscrição</p>
           <p className="break-words text-xl font-bold text-primary sm:text-2xl">{summary.registrationNumber}</p>
           <div className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
+            <span>Ingressos: {tickets.length}</span>
             <span>Camiseta: {summary.wantsShirt ? `${summary.shirtQuantity} ${summary.shirtColor} ${summary.shirtSize}` : 'Não selecionada'}</span>
             <span>Copo acrílico: {summary.wantsCup ? `${summary.cupQuantity} unidade(s)` : 'Não selecionado'}</span>
             <span>Caneca: {summary.wantsMug ? `${summary.mugQuantity} unidade(s)` : 'Não selecionada'}</span>
             <span className="font-bold text-dark">Valor total: {formatCurrency(currentTotal)}</span>
+          </div>
+          <div className="mt-5 border-t border-slate-200 pt-4">
+            <p className="text-sm font-bold text-dark">Titulares</p>
+            <ol className="mt-2 grid gap-1.5 text-sm text-muted sm:grid-cols-2">
+              {tickets.map((ticket, index) => <li key={ticket.ticketCode}>{index + 1}. {ticket.name}</li>)}
+            </ol>
           </div>
         </div>
 
@@ -102,9 +112,13 @@ export function SuccessPage() {
           Guarde o número da inscrição. O status será atualizado automaticamente após a confirmação do Mercado Pago.
         </div>
 
-        <Link to={`/ingresso/${summary.ticketCode}`} className="btn-secondary mt-6 w-full sm:w-auto">
-          <Ticket size={18} /> Ver ingresso digital
-        </Link>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2">
+          {tickets.map((ticket, index) => (
+            <Link key={ticket.ticketCode} to={`/ingresso/${ticket.ticketCode}`} className="btn-secondary w-full">
+              <Ticket size={18} /> Ver ingresso {index + 1} - {ticket.name}
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );
