@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Download, Loader2, MessageCircle, QrCode, ShieldCheck, ShieldX, UserRound } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Download, Loader2, QrCode, ShieldCheck, ShieldX, UserRound } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -7,6 +7,7 @@ import { eventInfo } from '../data/event';
 import { getTicketByCode } from '../services/registrationService';
 import type { Ticket as TicketType } from '../types';
 import { createTicketPdfBlob, downloadBlob, ticketPdfFileName } from '../utils/ticketPdf';
+import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 
 export function TicketPage() {
   const { codigo } = useParams();
@@ -165,7 +166,13 @@ export function TicketPage() {
                   Baixar ingresso em PDF
                 </button>
                 <button type="button" className="btn-secondary" onClick={handleWhatsAppShare} disabled={pdfLoading || shareLoading}>
-                  {shareLoading ? <Loader2 className="animate-spin" size={18} /> : <MessageCircle size={18} />}
+                  {shareLoading ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#25D366] text-white shadow-sm">
+                      <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
+                    </span>
+                  )}
                   Enviar pelo WhatsApp
                 </button>
               </div>

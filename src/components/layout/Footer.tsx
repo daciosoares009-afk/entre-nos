@@ -20,8 +20,8 @@ export function Footer() {
             @{env.instagramUsername}
           </a>
           <a className="inline-flex whitespace-nowrap items-center gap-2 transition hover:text-primary" href={`https://wa.me/${env.whatsappNumber}`} target="_blank" rel="noreferrer">
-            <span className="grid h-8 w-8 place-items-center rounded-full bg-[#25D366] text-white shadow-sm">
-              <WhatsAppIcon className="h-[18px] w-[18px]" />
+            <span className="grid h-9 w-9 place-items-center rounded-full bg-[#25D366] text-white shadow-[0_6px_16px_rgba(37,211,102,0.22)]">
+              <WhatsAppIcon className="h-5 w-5" aria-hidden="true" />
             </span>
             WhatsApp
           </a>

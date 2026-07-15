@@ -1,4 +1,4 @@
-import { Loader2, MessageCircle, Receipt, Ticket } from 'lucide-react';
+import { Loader2, Receipt, Ticket } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { env } from '../config/env';
@@ -7,6 +7,7 @@ import logoPix from '../assets/logo-pix.png';
 import type { RegistrationSummary } from '../types';
 import { createMercadoPagoCheckout } from '../services/paymentService';
 import { formatCurrency } from '../utils/format';
+import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 
 function getSummary(): RegistrationSummary | null {
   const raw = sessionStorage.getItem('entre-nos-registration');
@@ -102,7 +103,10 @@ export function SuccessPage() {
             Pagar com Pix
           </button>
           <a href={`https://wa.me/${env.whatsappNumber}?text=${whatsappMessage}`} target="_blank" rel="noreferrer" className="btn-secondary">
-            <MessageCircle size={18} /> Enviar comprovante
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#25D366] text-white shadow-sm">
+              <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
+            </span>
+            Enviar comprovante
           </a>
         </div>
 

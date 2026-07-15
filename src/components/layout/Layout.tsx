@@ -17,7 +17,7 @@ export function Layout({ children }: { children: ReactNode }) {
         rel="noreferrer"
         aria-label="Abrir suporte via WhatsApp"
       >
-        <WhatsAppIcon className="h-5 w-5 shrink-0" />
+        <WhatsAppIcon className="h-[22px] w-[22px] shrink-0" aria-hidden="true" />
         Suporte WhatsApp
       </a>
 
