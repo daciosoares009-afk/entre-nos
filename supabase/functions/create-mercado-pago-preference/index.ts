@@ -79,6 +79,12 @@ Deno.serve(async (request) => {
 
     const preference = await preferenceResponse.json();
     if (!preferenceResponse.ok || !preference.id || !preference.init_point) {
+      const diagnosticCodes = [
+        typeof preference?.error === 'string' ? preference.error : '',
+        ...(Array.isArray(preference?.cause) ? preference.cause.map((item: { code?: string }) => item?.code || '') : []),
+      ].filter(Boolean).slice(0, 4);
+      const diagnosticSuffix = diagnosticCodes.length > 0 ? ` Código: ${diagnosticCodes.join(', ')}.` : '';
+
       console.error('Mercado Pago preference error', {
         status: preferenceResponse.status,
         error: preference?.error,
@@ -91,7 +97,7 @@ Deno.serve(async (request) => {
       }
 
       if (preferenceResponse.status === 400) {
-        return json({ error: 'O Mercado Pago recusou os dados do checkout. Confira o Access Token do vendedor e tente novamente.' }, 502);
+        return json({ error: `O Mercado Pago recusou os dados do checkout.${diagnosticSuffix} Confira o Access Token do vendedor e tente novamente.` }, 502);
       }
 
       return json({ error: 'O Mercado Pago não conseguiu criar a cobrança neste momento. Tente novamente em alguns instantes.' }, 502);

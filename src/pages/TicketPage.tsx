@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Loader2, QrCode, ShieldCheck, ShieldX, UserRound } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Download, Loader2, MessageCircle, QrCode, ShieldCheck, ShieldX, UserRound } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -6,12 +6,16 @@ import { env } from '../config/env';
 import { eventInfo } from '../data/event';
 import { getTicketByCode } from '../services/registrationService';
 import type { Ticket as TicketType } from '../types';
+import { createTicketPdfBlob, downloadBlob, ticketPdfFileName } from '../utils/ticketPdf';
 
 export function TicketPage() {
   const { codigo } = useParams();
   const [ticket, setTicket] = useState<TicketType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [shareLoading, setShareLoading] = useState(false);
+  const [actionError, setActionError] = useState('');
 
   useEffect(() => {
     async function loadTicket() {
@@ -31,6 +35,60 @@ export function TicketPage() {
   const ticketUrl = `${env.publicSiteUrl}/ingresso/${codigo ?? ''}`;
   const isPaid = ticket?.payment_status === 'paid';
   const isValid = Boolean(ticket && isPaid && !ticket.checked_in);
+
+  async function createPdf() {
+    if (!ticket) throw new Error('Ingresso não encontrado.');
+    return createTicketPdfBlob({
+      ticket,
+      ticketUrl,
+      eventName: eventInfo.name,
+      eventDate: eventInfo.date,
+      eventTime: eventInfo.time,
+      eventLocation: eventInfo.location,
+    });
+  }
+
+  async function handleDownloadPdf() {
+    if (!ticket) return;
+    setActionError('');
+    setPdfLoading(true);
+    try {
+      const blob = await createPdf();
+      downloadBlob(blob, ticketPdfFileName(ticket.ticket_code));
+    } catch {
+      setActionError('Não foi possível gerar o PDF. Tente novamente.');
+    } finally {
+      setPdfLoading(false);
+    }
+  }
+
+  async function handleWhatsAppShare() {
+    if (!ticket) return;
+    setActionError('');
+    setShareLoading(true);
+    try {
+      const blob = await createPdf();
+      const file = new File([blob], ticketPdfFileName(ticket.ticket_code), { type: 'application/pdf' });
+      const shareData = {
+        title: `Ingresso ${eventInfo.name}`,
+        text: `Ingresso de ${ticket.name} - ${eventInfo.name}`,
+        files: [file],
+      };
+
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+        return;
+      }
+
+      const message = encodeURIComponent(`Meu ingresso do ${eventInfo.name}: ${ticketUrl}`);
+      window.location.assign(`https://wa.me/?text=${message}`);
+    } catch (shareError) {
+      if (shareError instanceof DOMException && shareError.name === 'AbortError') return;
+      setActionError('Não foi possível compartilhar. Baixe o PDF e anexe-o no WhatsApp.');
+    } finally {
+      setShareLoading(false);
+    }
+  }
 
   return (
     <section className="container-page py-8 sm:py-12">
@@ -99,6 +157,21 @@ export function TicketPage() {
               {isPaid ? <CheckCircle2 /> : <AlertCircle />}
               <span className="font-semibold">{isPaid ? 'Pagamento confirmado' : 'Aguardando confirmação do pagamento'}</span>
             </div>
+
+            {isPaid && (
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                <button type="button" className="btn-primary" onClick={handleDownloadPdf} disabled={pdfLoading || shareLoading}>
+                  {pdfLoading ? <Loader2 className="animate-spin" size={18} /> : <Download size={18} />}
+                  Baixar ingresso em PDF
+                </button>
+                <button type="button" className="btn-secondary" onClick={handleWhatsAppShare} disabled={pdfLoading || shareLoading}>
+                  {shareLoading ? <Loader2 className="animate-spin" size={18} /> : <MessageCircle size={18} />}
+                  Enviar pelo WhatsApp
+                </button>
+              </div>
+            )}
+
+            {actionError && <div className="mt-4 rounded-md border border-error/20 bg-error/5 p-3 text-sm text-error">{actionError}</div>}
           </>
         )}
       </div>
