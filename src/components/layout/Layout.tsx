@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Footer } from './Footer';
 import { Header } from './Header';
 import { env } from '../../config/env';
-import { WhatsAppIcon } from '../ui/WhatsAppIcon';
+import { WhatsAppBrandIcon } from '../ui/WhatsAppIcon';
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
@@ -17,7 +17,7 @@ export function Layout({ children }: { children: ReactNode }) {
         rel="noreferrer"
         aria-label="Abrir suporte via WhatsApp"
       >
-        <WhatsAppIcon className="h-[22px] w-[22px] shrink-0" aria-hidden="true" />
+        <WhatsAppBrandIcon className="h-7 w-7 shrink-0 rounded-lg shadow-sm" aria-hidden="true" />
         Suporte WhatsApp
       </a>
 
