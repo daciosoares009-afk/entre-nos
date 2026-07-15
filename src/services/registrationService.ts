@@ -42,7 +42,12 @@ export async function createRegistration(data: RegistrationFormData): Promise<Re
   };
 
   const { error } = await supabase.from('registrations').insert(payload);
-  if (error) throw new Error(error.message);
+  if (error) {
+    if (error.code === '23505' && error.message.includes('registrations_email_phone_key')) {
+      throw new Error('Já existe uma inscrição com este e-mail e telefone. Use outros dados para uma nova inscrição ou entre em contato pelo WhatsApp para recuperar a inscrição existente.');
+    }
+    throw new Error('Não foi possível registrar a inscrição. Tente novamente em alguns instantes.');
+  }
 
   return {
     registrationNumber,

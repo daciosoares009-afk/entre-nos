@@ -5,7 +5,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
-const prices = { shirt: 45, cup: 12, mug: 40 };
+const prices = { ticket: 15, shirt: 45, cup: 12, mug: 40 };
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -45,7 +45,9 @@ Deno.serve(async (request) => {
     if (registrationError || !registration) return json({ error: 'Inscrição não encontrada.' }, 404);
     if (registration.payment_status === 'paid') return json({ error: 'Esta inscrição já está paga.' }, 409);
 
-    const items: Array<Record<string, unknown>> = [];
+    const items: Array<Record<string, unknown>> = [
+      { id: 'ingresso-entre-nos', title: 'Ingresso Entre Nós Experience', quantity: 1, currency_id: 'BRL', unit_price: prices.ticket },
+    ];
     if (registration.wants_shirt && registration.shirt_quantity > 0) {
       items.push({ id: 'camiseta-entre-nos', title: `Camiseta Entre Nós - ${registration.shirt_color} ${registration.shirt_size}`, quantity: registration.shirt_quantity, currency_id: 'BRL', unit_price: prices.shirt });
     }
@@ -55,7 +57,6 @@ Deno.serve(async (request) => {
     if (registration.wants_mug && registration.mug_quantity > 0) {
       items.push({ id: 'caneca-entre-nos', title: 'Caneca Entre Nós', quantity: registration.mug_quantity, currency_id: 'BRL', unit_price: prices.mug });
     }
-    if (items.length === 0) return json({ error: 'Selecione pelo menos um produto para pagar.' }, 400);
     const serverTotal = items.reduce((total, item) => total + Number(item.unit_price) * Number(item.quantity), 0);
 
     const preferenceResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {

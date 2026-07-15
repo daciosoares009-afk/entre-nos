@@ -26,10 +26,11 @@ export function HomePage() {
               <p className="text-xs font-extrabold uppercase tracking-[0.18em] text-primary">Tema</p>
               <p className="mt-2 text-base font-bold leading-7 text-dark sm:text-lg">{eventInfo.theme}</p>
             </div>
-            <div className="mt-6 grid gap-2 text-sm font-semibold text-text min-[480px]:grid-cols-3 sm:gap-3">
+            <div className="mt-6 grid gap-2 text-sm font-semibold text-text min-[480px]:grid-cols-2 sm:gap-3 lg:grid-cols-4">
               <span>Data: {eventInfo.date}</span>
               <span>Horário: {eventInfo.time}</span>
               <span>Local: {eventInfo.location}</span>
+              <span>Ingresso: {formatCurrency(productConfig.ticketPrice)}</span>
             </div>
             <div className="mt-7 flex flex-col gap-3 min-[480px]:flex-row sm:mt-8">
               <Link to="/inscricao" className="btn-primary">

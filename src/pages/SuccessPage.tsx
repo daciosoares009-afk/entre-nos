@@ -2,6 +2,7 @@ import { Loader2, MessageCircle, Receipt, Ticket } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { env } from '../config/env';
+import { calculateTotal } from '../data/products';
 import type { RegistrationSummary } from '../types';
 import { createMercadoPagoCheckout } from '../services/paymentService';
 import { formatCurrency } from '../utils/format';
@@ -53,6 +54,7 @@ export function SuccessPage() {
   const whatsappMessage = encodeURIComponent(
     `Olá! Enviei o comprovante do Entre Nós Experience. Inscrição: ${summary.registrationNumber}`,
   );
+  const currentTotal = calculateTotal(summary);
 
   return (
     <section className="container-page py-8 sm:py-12">
@@ -74,14 +76,14 @@ export function SuccessPage() {
             <span>Camiseta: {summary.wantsShirt ? `${summary.shirtQuantity} ${summary.shirtColor} ${summary.shirtSize}` : 'Não selecionada'}</span>
             <span>Copo acrílico: {summary.wantsCup ? `${summary.cupQuantity} unidade(s)` : 'Não selecionado'}</span>
             <span>Caneca: {summary.wantsMug ? `${summary.mugQuantity} unidade(s)` : 'Não selecionada'}</span>
-            <span className="font-bold text-dark">Valor total: {formatCurrency(summary.totalAmount)}</span>
+            <span className="font-bold text-dark">Valor total: {formatCurrency(currentTotal)}</span>
           </div>
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <button type="button" onClick={handlePayment} disabled={paymentLoading || summary.totalAmount <= 0} className="btn-primary">
+          <button type="button" onClick={handlePayment} disabled={paymentLoading} className="btn-primary">
             {paymentLoading && <Loader2 className="animate-spin" size={18} />}
-            {summary.totalAmount > 0 ? 'Pagar com Mercado Pago' : 'Nenhum valor para pagar'}
+            Pagar com Mercado Pago
           </button>
           <a href={`https://wa.me/${env.whatsappNumber}?text=${whatsappMessage}`} target="_blank" rel="noreferrer" className="btn-secondary">
             <MessageCircle size={18} /> Enviar comprovante

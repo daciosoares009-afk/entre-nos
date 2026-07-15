@@ -58,7 +58,7 @@ export function RegistrationPage() {
       <div className="mx-auto max-w-3xl">
         <p className="text-sm font-bold uppercase tracking-wide text-primary">Inscrição</p>
         <h1 className="mt-2 text-2xl font-bold leading-tight text-dark sm:text-4xl">Participar do Entre Nós Experience</h1>
-        <p className="mt-3 text-sm leading-6 text-muted sm:text-base">Preencha os dados abaixo. A confirmação do pagamento será feita manualmente pela equipe.</p>
+        <p className="mt-3 text-sm leading-6 text-muted sm:text-base">Preencha os dados abaixo. Após a inscrição, você poderá pagar com segurança pelo Mercado Pago.</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="mt-6 grid gap-5 rounded-lg bg-white p-4 shadow-soft sm:mt-8 sm:p-8">
           {error && <div className="rounded-md border border-error/20 bg-error/5 p-3 text-sm text-error">{error}</div>}
@@ -87,6 +87,14 @@ export function RegistrationPage() {
             <Field label="Estado" error={errors.state?.message}>
               <input className="field uppercase" maxLength={2} {...register('state')} placeholder="CE" />
             </Field>
+          </div>
+
+          <div className="flex flex-col gap-2 rounded-lg border border-primary/20 bg-primary/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="font-bold text-dark">Ingresso do evento</h2>
+              <p className="mt-1 text-sm text-muted">Incluído automaticamente em toda inscrição.</p>
+            </div>
+            <p className="text-xl font-extrabold text-primary">{formatCurrency(productConfig.ticketPrice)}</p>
           </div>
 
           <div className="rounded-lg border border-slate-100 bg-background p-4">

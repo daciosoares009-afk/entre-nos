@@ -77,6 +77,7 @@ Deno.serve(async (request) => {
     if (lookupError || !registration) return new Response('registration not found', { status: 404 });
 
     const expectedAmount =
+      15 +
       (registration.wants_shirt ? registration.shirt_quantity * 45 : 0) +
       (registration.wants_cup ? registration.cup_quantity * 12 : 0) +
       (registration.wants_mug ? registration.mug_quantity * 40 : 0);
