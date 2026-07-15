@@ -1,7 +1,8 @@
-import { Instagram, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { env } from '../../config/env';
+import logoInstagram from '../../assets/logo-instagram.png';
 import logoEntreNos from '../../assets/logo-entre-nos-experience-transparent.png';
+import logoWhatsApp from '../../assets/logo-whatsapp.png';
 
 export function Footer() {
   return (
@@ -21,10 +22,10 @@ export function Footer() {
         </div>
         <div className="grid grid-cols-2 items-center gap-4 text-sm sm:flex sm:flex-wrap md:max-w-sm md:justify-end">
           <a className="inline-flex items-center gap-2 text-muted hover:text-primary" href={`https://instagram.com/${env.instagramUsername}`} target="_blank" rel="noreferrer">
-            <Instagram size={18} /> @{env.instagramUsername}
+            <img src={logoInstagram} alt="" className="h-5 w-5 shrink-0 rounded object-cover" /> @{env.instagramUsername}
           </a>
           <a className="inline-flex items-center gap-2 text-muted hover:text-primary" href={`https://wa.me/${env.whatsappNumber}`} target="_blank" rel="noreferrer">
-            <MessageCircle size={18} /> WhatsApp
+            <img src={logoWhatsApp} alt="" className="h-5 w-5 shrink-0 rounded-sm object-cover" /> WhatsApp
           </a>
           <Link className="text-muted hover:text-primary" to="/privacidade">
             Privacidade

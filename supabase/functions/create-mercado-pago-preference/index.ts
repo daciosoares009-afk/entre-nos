@@ -68,6 +68,9 @@ Deno.serve(async (request) => {
         external_reference: registration.registration_number,
         notification_url: `${supabaseUrl}/functions/v1/mercado-pago-webhook`,
         statement_descriptor: 'ENTRE NOS',
+        payment_methods: {
+          default_payment_method_id: 'pix',
+        },
         back_urls: {
           success: `${siteUrl}/sucesso?payment=approved`,
           pending: `${siteUrl}/sucesso?payment=pending`,

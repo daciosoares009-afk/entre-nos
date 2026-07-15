@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
+import logoWhatsApp from '../../assets/logo-whatsapp.png';
 import { Footer } from './Footer';
 import { Header } from './Header';
-import { WhatsAppIcon } from '../ui/WhatsAppIcon';
 import { env } from '../../config/env';
 
 export function Layout({ children }: { children: ReactNode }) {
@@ -17,7 +17,7 @@ export function Layout({ children }: { children: ReactNode }) {
         rel="noreferrer"
         aria-label="Abrir suporte via WhatsApp"
       >
-        <WhatsAppIcon className="h-4 w-4" />
+        <img src={logoWhatsApp} alt="" className="h-5 w-5 shrink-0 rounded-sm object-cover" />
         Suporte WhatsApp
       </a>
 

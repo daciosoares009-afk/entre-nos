@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { env } from '../config/env';
 import { calculateTotal } from '../data/products';
+import logoPix from '../assets/logo-pix.png';
 import type { RegistrationSummary } from '../types';
 import { createMercadoPagoCheckout } from '../services/paymentService';
 import { formatCurrency } from '../utils/format';
@@ -83,7 +84,8 @@ export function SuccessPage() {
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <button type="button" onClick={handlePayment} disabled={paymentLoading} className="btn-primary">
             {paymentLoading && <Loader2 className="animate-spin" size={18} />}
-            Pagar com Mercado Pago
+            {!paymentLoading && <img src={logoPix} alt="" className="h-5 w-5 shrink-0 object-contain" />}
+            Pagar com Pix
           </button>
           <a href={`https://wa.me/${env.whatsappNumber}?text=${whatsappMessage}`} target="_blank" rel="noreferrer" className="btn-secondary">
             <MessageCircle size={18} /> Enviar comprovante
