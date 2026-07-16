@@ -100,7 +100,7 @@ export function SuccessPage() {
                 <img src={logoPix} alt="" className="h-[18px] w-[18px] object-contain" />
               </span>
             )}
-            Pagar com Pix
+            Realizar pagamentos
           </button>
           <a href={`https://wa.me/${env.whatsappNumber}?text=${whatsappMessage}`} target="_blank" rel="noreferrer" className="btn-secondary">
             <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#25D366] text-white shadow-sm">
