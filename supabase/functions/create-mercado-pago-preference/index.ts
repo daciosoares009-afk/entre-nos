@@ -34,10 +34,18 @@ Deno.serve(async (request) => {
   if (request.method !== 'POST') return json({ error: 'Método não permitido.' }, 405);
 
   try {
-    const accessToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
+    const accessToken = Deno.env
+      .get('MERCADO_PAGO_ACCESS_TOKEN')
+      ?.trim()
+      .replace(/^Bearer\s+/i, '')
+      .replace(/^['"]|['"]$/g, '')
+      .trim();
     const siteUrl = getPublicSiteOrigin(Deno.env.get('PUBLIC_SITE_URL'));
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceRoleKey = getServiceRoleKey();
+    if (accessToken && !accessToken.startsWith('APP_USR-')) {
+      return json({ error: 'O segredo configurado não é um Access Token de produção do Mercado Pago. Ele deve começar com APP_USR-.' }, 503);
+    }
     if (!accessToken || !siteUrl || !supabaseUrl || !serviceRoleKey) {
       return json({ error: 'Integração de pagamento não configurada.' }, 503);
     }
@@ -116,8 +124,12 @@ Deno.serve(async (request) => {
         cause: Array.isArray(preference?.cause) ? preference.cause.map((item: { code?: string }) => item?.code).filter(Boolean) : [],
       });
 
-      if (preferenceResponse.status === 401 || preferenceResponse.status === 403) {
-        return json({ error: 'A credencial do Mercado Pago está inválida ou sem permissão. Use o Access Token do vendedor.' }, 502);
+      if (preferenceResponse.status === 401) {
+        return json({ error: 'O Mercado Pago recusou o Access Token (erro 401). Gere uma nova credencial de produção na conta do vendedor e atualize o segredo no Supabase.' }, 502);
+      }
+
+      if (preferenceResponse.status === 403) {
+        return json({ error: 'O Access Token foi reconhecido, mas a conta ou aplicação não tem permissão para criar pagamentos (erro 403). Ative as credenciais de produção e o Pix no Mercado Pago.' }, 502);
       }
 
       if (preferenceResponse.status === 400) {

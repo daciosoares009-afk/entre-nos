@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Footer } from './Footer';
 import { Header } from './Header';
 import { env } from '../../config/env';
-import { WhatsAppBrandIcon } from '../ui/WhatsAppIcon';
+import { WhatsAppIcon } from '../ui/WhatsAppIcon';
 
 export function Layout({ children }: { children: ReactNode }) {
   return (
@@ -11,14 +11,13 @@ export function Layout({ children }: { children: ReactNode }) {
       <main>{children}</main>
 
       <a
-        className="fixed bottom-5 right-5 z-50 hidden min-h-11 items-center gap-2.5 rounded-full bg-[#25D366] px-4 py-2.5 text-[13px] font-bold tracking-[0.01em] text-white shadow-[0_12px_30px_rgba(37,211,102,0.28)] transition hover:-translate-y-0.5 hover:bg-[#1ebe5d] focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2 sm:flex"
+        className="fixed bottom-5 right-5 z-50 hidden h-14 w-14 items-center justify-center overflow-hidden rounded-full bg-white p-0 shadow-[0_12px_30px_rgba(37,211,102,0.3)] transition hover:-translate-y-0.5 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#25D366] focus:ring-offset-2 sm:flex"
         href={`https://wa.me/${env.whatsappNumber}`}
         target="_blank"
         rel="noreferrer"
         aria-label="Abrir suporte via WhatsApp"
       >
-        <WhatsAppBrandIcon className="h-7 w-7 shrink-0 rounded-lg shadow-sm" aria-hidden="true" />
-        Suporte WhatsApp
+        <WhatsAppIcon className="h-full w-full object-cover" aria-hidden="true" />
       </a>
 
       <Footer />

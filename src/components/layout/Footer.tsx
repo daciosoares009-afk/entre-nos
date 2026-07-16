@@ -2,7 +2,7 @@ import { Instagram } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { env } from '../../config/env';
 import logoEntreNos from '../../assets/logo-entre-nos-experience-transparent.png';
-import { WhatsAppBrandIcon } from '../ui/WhatsAppIcon';
+import { WhatsAppIcon } from '../ui/WhatsAppIcon';
 
 export function Footer() {
   return (
@@ -20,7 +20,7 @@ export function Footer() {
             @{env.instagramUsername}
           </a>
           <a className="inline-flex whitespace-nowrap items-center gap-2 transition hover:text-primary" href={`https://wa.me/${env.whatsappNumber}`} target="_blank" rel="noreferrer">
-            <WhatsAppBrandIcon className="h-8 w-8 shrink-0 rounded-lg shadow-[0_6px_16px_rgba(37,211,102,0.22)]" aria-hidden="true" />
+            <WhatsAppIcon className="h-8 w-8 shrink-0 rounded-lg object-cover shadow-[0_6px_16px_rgba(37,211,102,0.22)]" aria-hidden="true" />
             WhatsApp
           </a>
           <Link className="whitespace-nowrap transition hover:text-primary" to="/privacidade">
