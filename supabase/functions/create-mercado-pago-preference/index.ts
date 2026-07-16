@@ -116,6 +116,10 @@ Deno.serve(async (request) => {
         ...(Array.isArray(preference?.cause) ? preference.cause.map((item: { code?: string }) => item?.code || '') : []),
       ].filter(Boolean).slice(0, 4);
       const diagnosticSuffix = diagnosticCodes.length > 0 ? ` Código: ${diagnosticCodes.join(', ')}.` : '';
+      const technicalMessage = typeof preference?.message === 'string'
+        ? preference.message.replace(/[\r\n]+/g, ' ').slice(0, 240)
+        : '';
+      const mercadoPagoRequestId = preferenceResponse.headers.get('x-request-id') || '';
 
       console.error('Mercado Pago preference error', {
         status: preferenceResponse.status,
@@ -129,7 +133,16 @@ Deno.serve(async (request) => {
       }
 
       if (preferenceResponse.status === 403) {
-        return json({ error: 'O Access Token foi reconhecido, mas a conta ou aplicação não tem permissão para criar pagamentos (erro 403). Ative as credenciais de produção e o Pix no Mercado Pago.' }, 502);
+        const identityResponse = await fetch('https://api.mercadolibre.com/users/me', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+        });
+        const identityStatus = identityResponse.status;
+        const detail = [diagnosticCodes.join(', '), technicalMessage].filter(Boolean).join(' — ');
+        const requestReference = mercadoPagoRequestId ? ` Referência: ${mercadoPagoRequestId}.` : '';
+        const identityDetail = identityResponse.ok
+          ? ' O token autenticou a conta, mas a política do Mercado Pago bloqueou o Checkout Pro.'
+          : ` A verificação da própria conta também foi recusada (HTTP ${identityStatus}), indicando bloqueio da conta ou da credencial.`;
+        return json({ error: `O Mercado Pago recusou a criação do pagamento (erro 403).${detail ? ` Detalhe: ${detail}.` : ''}${identityDetail}${requestReference}` }, 502);
       }
 
       if (preferenceResponse.status === 400) {
