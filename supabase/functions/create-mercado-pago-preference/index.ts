@@ -97,9 +97,6 @@ Deno.serve(async (request) => {
         external_reference: orderNumber,
         notification_url: `${supabaseUrl}/functions/v1/mercado-pago-webhook`,
         statement_descriptor: 'ENTRE NOS',
-        payment_methods: {
-          default_payment_method_id: 'pix',
-        },
         back_urls: {
           success: `${siteUrl}/sucesso?payment=approved`,
           pending: `${siteUrl}/sucesso?payment=pending`,
@@ -146,7 +143,9 @@ Deno.serve(async (request) => {
       }
 
       if (preferenceResponse.status === 400) {
-        return json({ error: `O Mercado Pago recusou os dados do checkout.${diagnosticSuffix} Confira o Access Token do vendedor e tente novamente.` }, 502);
+        const detail = [diagnosticCodes.join(', '), technicalMessage].filter(Boolean).join(' — ');
+        const requestReference = mercadoPagoRequestId ? ` Referência: ${mercadoPagoRequestId}.` : '';
+        return json({ error: `O Mercado Pago recusou os dados do checkout (erro 400).${detail ? ` Detalhe: ${detail}.` : diagnosticSuffix}${requestReference}` }, 502);
       }
 
       return json({ error: 'O Mercado Pago não conseguiu criar a cobrança neste momento. Tente novamente em alguns instantes.' }, 502);
