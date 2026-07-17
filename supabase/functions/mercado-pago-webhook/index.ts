@@ -41,15 +41,23 @@ function mapPaymentStatus(status: string) {
   return 'pending';
 }
 
+function mapOrderStatus(status: string, statusDetail: string) {
+  if (status === 'processed' && statusDetail === 'accredited') return 'paid';
+  if (status === 'refunded') return 'refunded';
+  if (status === 'canceled' || status === 'cancelled' || status === 'failed' || status === 'expired') return 'cancelled';
+  if (status === 'processing' || status === 'in_review') return 'under_review';
+  return 'pending';
+}
+
 Deno.serve(async (request) => {
   if (request.method !== 'POST') return new Response('ok', { status: 200 });
 
   try {
     const url = new URL(request.url);
     const body = await request.json().catch(() => ({} as { data?: { id?: string }; type?: string }));
-    const dataId = String(url.searchParams.get('data.id') || '');
+    const dataId = String(url.searchParams.get('data.id') || body?.data?.id || '');
     const eventType = url.searchParams.get('type') || body?.type;
-    if (eventType !== 'payment' || !dataId) return new Response('ok', { status: 200 });
+    if ((eventType !== 'payment' && eventType !== 'order') || !dataId) return new Response('ok', { status: 200 });
 
     const webhookSecret = Deno.env.get('MERCADO_PAGO_WEBHOOK_SECRET');
     const accessToken = Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN');
@@ -59,13 +67,17 @@ Deno.serve(async (request) => {
 
     if (!(await isValidSignature(request, dataId, webhookSecret))) return new Response('invalid signature', { status: 401 });
 
-    const paymentResponse = await fetch(`https://api.mercadopago.com/v1/payments/${encodeURIComponent(dataId)}`, {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    });
-    if (!paymentResponse.ok) return new Response('payment lookup failed', { status: 502 });
+    const resourceResponse = await fetch(
+      eventType === 'order'
+        ? `https://api.mercadopago.com/v1/orders/${encodeURIComponent(dataId)}`
+        : `https://api.mercadopago.com/v1/payments/${encodeURIComponent(dataId)}`,
+      { headers: { Authorization: `Bearer ${accessToken}` } },
+    );
+    if (!resourceResponse.ok) return new Response(`${eventType} lookup failed`, { status: 502 });
 
-    const payment = await paymentResponse.json();
-    const orderNumber = String(payment.external_reference || '');
+    const resource = await resourceResponse.json();
+    const orderPayment = eventType === 'order' ? resource?.transactions?.payments?.[0] : null;
+    const orderNumber = String(resource.external_reference || '');
     if (!orderNumber) return new Response('ok', { status: 200 });
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
@@ -82,16 +94,22 @@ Deno.serve(async (request) => {
       (orderOwner.wants_shirt ? orderOwner.shirt_quantity * 45 : 0) +
       (orderOwner.wants_cup ? orderOwner.cup_quantity * 12 : 0) +
       (orderOwner.wants_mug ? orderOwner.mug_quantity * 40 : 0);
-    const receivedAmount = Number(payment.transaction_amount);
+    const receivedAmount = Number(eventType === 'order' ? resource.total_amount : resource.transaction_amount);
     const amountMatches = Math.abs(expectedAmount - receivedAmount) < 0.01;
-    const status = amountMatches ? mapPaymentStatus(String(payment.status)) : 'under_review';
+    const providerStatus = String(eventType === 'order' ? resource.status : resource.status);
+    const providerStatusDetail = String(eventType === 'order' ? resource.status_detail || orderPayment?.status_detail || '' : resource.status_detail || '');
+    const status = amountMatches
+      ? eventType === 'order'
+        ? mapOrderStatus(providerStatus, providerStatusDetail)
+        : mapPaymentStatus(providerStatus)
+      : 'under_review';
 
     const { error: updateError } = await supabase
       .from('registrations')
       .update({
         payment_status: status,
-        mercado_pago_payment_id: String(payment.id),
-        mercado_pago_status: String(payment.status),
+        mercado_pago_payment_id: String(eventType === 'order' ? orderPayment?.id || resource.id : resource.id),
+        mercado_pago_status: providerStatus,
         payment_updated_at: new Date().toISOString(),
       })
       .eq('order_number', orderNumber);

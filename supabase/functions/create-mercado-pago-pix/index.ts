@@ -52,7 +52,9 @@ Deno.serve(async (request) => {
   if (request.method !== 'POST') return json({ error: 'Método não permitido.' }, 405);
 
   try {
-    const accessToken = normalizeAccessToken(Deno.env.get('MERCADO_PAGO_PIX_ACCESS_TOKEN'));
+    const accessToken = normalizeAccessToken(
+      Deno.env.get('MERCADO_PAGO_PIX_ACCESS_TOKEN') || Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN'),
+    );
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceRoleKey = getServiceRoleKey();
     if (!accessToken || !supabaseUrl || !serviceRoleKey) return json({ error: 'Integração Pix não configurada.' }, 503);

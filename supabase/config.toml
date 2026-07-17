@@ -1,5 +1,8 @@
 [functions.create-mercado-pago-preference]
 verify_jwt = false
 
+[functions.create-mercado-pago-pix]
+verify_jwt = false
+
 [functions.mercado-pago-webhook]
 verify_jwt = false

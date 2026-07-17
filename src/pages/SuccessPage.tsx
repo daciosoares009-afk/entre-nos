@@ -1,11 +1,12 @@
-import { Loader2, Receipt, Ticket } from 'lucide-react';
+import { Check, Copy, CreditCard, Loader2, Receipt, Ticket } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { QRCodeSVG } from 'qrcode.react';
 import { env } from '../config/env';
 import { calculateTotal } from '../data/products';
 import logoPix from '../assets/logo-pix.png';
 import type { RegistrationSummary } from '../types';
-import { createMercadoPagoCheckout } from '../services/paymentService';
+import { createMercadoPagoCheckout, createMercadoPagoPix, type MercadoPagoPix } from '../services/paymentService';
 import { formatCurrency } from '../utils/format';
 import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 
@@ -23,7 +24,10 @@ export function SuccessPage() {
   const summary = getSummary();
   const [searchParams] = useSearchParams();
   const [paymentLoading, setPaymentLoading] = useState(false);
+  const [pixLoading, setPixLoading] = useState(false);
   const [paymentError, setPaymentError] = useState('');
+  const [pix, setPix] = useState<MercadoPagoPix | null>(null);
+  const [pixCopied, setPixCopied] = useState(false);
   const paymentReturn = searchParams.get('payment');
 
   async function handlePayment() {
@@ -37,6 +41,26 @@ export function SuccessPage() {
       setPaymentError(error instanceof Error ? error.message : 'Não foi possível iniciar o pagamento.');
       setPaymentLoading(false);
     }
+  }
+
+  async function handlePix() {
+    if (!summary) return;
+    setPaymentError('');
+    setPixLoading(true);
+    try {
+      setPix(await createMercadoPagoPix(summary.registrationNumber, summary.ticketCode));
+    } catch (error) {
+      setPaymentError(error instanceof Error ? error.message : 'Não foi possível gerar o Pix.');
+    } finally {
+      setPixLoading(false);
+    }
+  }
+
+  async function copyPixCode() {
+    if (!pix?.qrCode) return;
+    await navigator.clipboard.writeText(pix.qrCode);
+    setPixCopied(true);
+    window.setTimeout(() => setPixCopied(false), 2500);
   }
 
   if (!summary) {
@@ -93,16 +117,20 @@ export function SuccessPage() {
         </div>
 
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
-          <button type="button" onClick={handlePayment} disabled={paymentLoading} className="btn-primary">
-            {paymentLoading && <Loader2 className="animate-spin" size={18} />}
-            {!paymentLoading && (
+          <button type="button" onClick={handlePix} disabled={pixLoading} className="btn-primary">
+            {pixLoading ? <Loader2 className="animate-spin" size={18} /> : (
               <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-white shadow-sm">
                 <img src={logoPix} alt="" className="h-[18px] w-[18px] object-contain" />
               </span>
             )}
+            Pagar com Pix
+          </button>
+          <button type="button" onClick={handlePayment} disabled={paymentLoading} className="btn-primary">
+            {paymentLoading && <Loader2 className="animate-spin" size={18} />}
+            {!paymentLoading && <CreditCard size={19} />}
             Realizar pagamentos
           </button>
-          <a href={`https://wa.me/${env.whatsappNumber}?text=${whatsappMessage}`} target="_blank" rel="noreferrer" className="btn-secondary">
+          <a href={`https://wa.me/${env.whatsappNumber}?text=${whatsappMessage}`} target="_blank" rel="noreferrer" className="btn-secondary sm:col-span-2">
             <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#25D366] text-white shadow-sm">
               <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
             </span>
@@ -111,6 +139,21 @@ export function SuccessPage() {
         </div>
 
         {paymentError && <div className="mt-4 rounded-md border border-error/20 bg-error/5 p-3 text-sm text-error">{paymentError}</div>}
+
+        {pix && (
+          <div className="mt-5 rounded-lg border border-primary/15 bg-background p-4 text-center sm:p-6">
+            <h2 className="text-xl font-bold text-dark">Pix gerado</h2>
+            <p className="mt-1 text-sm text-muted">Pague {formatCurrency(pix.amount)} em qualquer banco. Não é necessário ter conta Mercado Pago.</p>
+            <div className="mx-auto mt-5 w-fit rounded-lg bg-white p-3 shadow-sm">
+              <QRCodeSVG value={pix.qrCode} size={220} level="M" includeMargin />
+            </div>
+            <button type="button" onClick={copyPixCode} className="btn-primary mx-auto mt-5 w-full sm:max-w-sm">
+              {pixCopied ? <Check size={18} /> : <Copy size={18} />}
+              {pixCopied ? 'Código Pix copiado' : 'Copiar código Pix'}
+            </button>
+            <p className="mt-3 text-xs text-muted">Abra o aplicativo do seu banco e escolha Pix Copia e Cola. Válido por {pix.expiresIn}.</p>
+          </div>
+        )}
 
         <div className="mt-6 rounded-md bg-warning/10 p-4 text-sm text-text">
           Guarde o número da inscrição. O status será atualizado automaticamente após a confirmação do Mercado Pago.
