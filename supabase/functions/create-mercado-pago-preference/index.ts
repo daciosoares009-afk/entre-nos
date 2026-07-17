@@ -90,7 +90,7 @@ Deno.serve(async (request) => {
 
     const preferenceResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
       method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', 'X-Idempotency-Key': `entre-nos-${orderNumber}` },
+      headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json', 'X-Idempotency-Key': `entre-nos-prod-v2-${orderNumber}` },
       body: JSON.stringify({
         items,
         payer: { name: orderOwner.name, email: orderOwner.email },
