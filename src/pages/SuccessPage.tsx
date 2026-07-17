@@ -1,13 +1,16 @@
-import { Check, Copy, CreditCard, Loader2, Receipt, Ticket } from 'lucide-react';
-import { useState } from 'react';
+import { Check, CheckCircle2, Copy, CreditCard, Download, Loader2, Receipt, Ticket } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { QRCodeSVG } from 'qrcode.react';
 import { env } from '../config/env';
 import { calculateTotal } from '../data/products';
+import { eventInfo } from '../data/event';
 import logoPix from '../assets/logo-pix.png';
-import type { RegistrationSummary } from '../types';
+import type { RegistrationSummary, Ticket as TicketType } from '../types';
 import { createMercadoPagoCheckout, createMercadoPagoPix, type MercadoPagoPix } from '../services/paymentService';
+import { getTicketByCode } from '../services/registrationService';
 import { formatCurrency } from '../utils/format';
+import { createTicketPdfBlob, downloadBlob, ticketPdfFileName } from '../utils/ticketPdf';
 import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 
 function getSummary(): RegistrationSummary | null {
@@ -21,14 +24,39 @@ function getSummary(): RegistrationSummary | null {
 }
 
 export function SuccessPage() {
-  const summary = getSummary();
+  const [summary] = useState(getSummary);
   const [searchParams] = useSearchParams();
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [pixLoading, setPixLoading] = useState(false);
   const [paymentError, setPaymentError] = useState('');
   const [pix, setPix] = useState<MercadoPagoPix | null>(null);
   const [pixCopied, setPixCopied] = useState(false);
+  const [confirmedTickets, setConfirmedTickets] = useState<TicketType[]>([]);
+  const [ticketAction, setTicketAction] = useState('');
   const paymentReturn = searchParams.get('payment');
+
+  useEffect(() => {
+    if (!summary) return;
+    let active = true;
+    const summaryTickets = summary.tickets?.length
+      ? summary.tickets
+      : [{ registrationNumber: summary.registrationNumber, ticketCode: summary.ticketCode, name: summary.name }];
+
+    async function checkPayment() {
+      const results = await Promise.all(summaryTickets.map((ticket) => getTicketByCode(ticket.ticketCode).catch(() => null)));
+      if (!active) return;
+      const paidTickets = results.filter((ticket): ticket is TicketType => ticket?.payment_status === 'paid');
+      setConfirmedTickets(paidTickets);
+      if (paidTickets.length === summaryTickets.length) window.clearInterval(intervalId);
+    }
+
+    const intervalId = window.setInterval(checkPayment, 4000);
+    void checkPayment();
+    return () => {
+      active = false;
+      window.clearInterval(intervalId);
+    };
+  }, [summary]);
 
   async function handlePayment() {
     if (!summary) return;
@@ -61,6 +89,52 @@ export function SuccessPage() {
     await navigator.clipboard.writeText(pix.qrCode);
     setPixCopied(true);
     window.setTimeout(() => setPixCopied(false), 2500);
+  }
+
+  async function createPdf(ticket: TicketType) {
+    return createTicketPdfBlob({
+      ticket,
+      ticketUrl: `${env.publicSiteUrl}/ingresso/${ticket.ticket_code}`,
+      eventName: eventInfo.name,
+      eventDate: eventInfo.date,
+      eventTime: eventInfo.time,
+      eventLocation: eventInfo.location,
+    });
+  }
+
+  async function handleDownloadTicket(ticket: TicketType) {
+    setPaymentError('');
+    setTicketAction(`${ticket.ticket_code}:download`);
+    try {
+      const blob = await createPdf(ticket);
+      downloadBlob(blob, ticketPdfFileName(ticket.ticket_code));
+    } catch {
+      setPaymentError('Não foi possível gerar o PDF do ingresso. Tente novamente.');
+    } finally {
+      setTicketAction('');
+    }
+  }
+
+  async function handleShareTicket(ticket: TicketType) {
+    setPaymentError('');
+    setTicketAction(`${ticket.ticket_code}:share`);
+    const ticketUrl = `${env.publicSiteUrl}/ingresso/${ticket.ticket_code}`;
+    try {
+      const blob = await createPdf(ticket);
+      const file = new File([blob], ticketPdfFileName(ticket.ticket_code), { type: 'application/pdf' });
+      const shareData = { title: `Ingresso ${eventInfo.name}`, text: `Ingresso de ${ticket.name}`, files: [file] };
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+      } else {
+        window.location.assign(`https://wa.me/?text=${encodeURIComponent(`Ingresso de ${ticket.name}: ${ticketUrl}`)}`);
+      }
+    } catch (error) {
+      if (!(error instanceof DOMException && error.name === 'AbortError')) {
+        setPaymentError('Não foi possível compartilhar. Baixe o PDF e anexe-o no WhatsApp.');
+      }
+    } finally {
+      setTicketAction('');
+    }
   }
 
   if (!summary) {
@@ -152,6 +226,39 @@ export function SuccessPage() {
               {pixCopied ? 'Código Pix copiado' : 'Copiar código Pix'}
             </button>
             <p className="mt-3 text-xs text-muted">Abra o aplicativo do seu banco e escolha Pix Copia e Cola. Válido por {pix.expiresIn}.</p>
+          </div>
+        )}
+
+        {confirmedTickets.length === tickets.length && (
+          <div className="mt-6 rounded-lg border border-success/20 bg-success/10 p-4 sm:p-6">
+            <div className="flex items-start gap-3 text-success">
+              <CheckCircle2 className="mt-0.5 shrink-0" size={26} />
+              <div>
+                <h2 className="text-lg font-bold">Pagamento confirmado</h2>
+                <p className="mt-1 text-sm">Seus ingressos estão liberados. Baixe o PDF ou envie pelo WhatsApp.</p>
+              </div>
+            </div>
+            <div className="mt-5 grid gap-4">
+              {confirmedTickets.map((ticket, index) => (
+                <div key={ticket.ticket_code} className="rounded-md bg-white p-4 shadow-sm">
+                  <p className="font-bold text-dark">Ingresso {index + 1} — {ticket.name}</p>
+                  <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <button type="button" className="btn-primary" onClick={() => handleDownloadTicket(ticket)} disabled={Boolean(ticketAction)}>
+                      {ticketAction === `${ticket.ticket_code}:download` ? <Loader2 className="animate-spin" size={18} /> : <Download size={18} />}
+                      Baixar em PDF
+                    </button>
+                    <button type="button" className="btn-secondary" onClick={() => handleShareTicket(ticket)} disabled={Boolean(ticketAction)}>
+                      {ticketAction === `${ticket.ticket_code}:share` ? <Loader2 className="animate-spin" size={18} /> : (
+                        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-[#25D366] text-white shadow-sm">
+                          <WhatsAppIcon className="h-4 w-4" aria-hidden="true" />
+                        </span>
+                      )}
+                      Enviar pelo WhatsApp
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
