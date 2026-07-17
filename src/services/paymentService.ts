@@ -47,3 +47,11 @@ export async function createMercadoPagoPix(registrationNumber: string, ticketCod
   if (!data?.qrCode) throw new Error(data?.error || 'Código Pix não recebido.');
   return data as MercadoPagoPix;
 }
+
+export async function syncMercadoPagoPayment(registrationNumber: string, ticketCode: string) {
+  if (!supabase) return;
+  const { error } = await supabase.functions.invoke('sync-mercado-pago-payment', {
+    body: { registrationNumber, ticketCode },
+  });
+  if (error) throw error;
+}

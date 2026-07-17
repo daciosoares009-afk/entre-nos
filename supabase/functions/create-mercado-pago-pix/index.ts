@@ -132,6 +132,7 @@ Deno.serve(async (request) => {
     const { error: updateError } = await supabase
       .from('registrations')
       .update({
+        mercado_pago_preference_id: String(mercadoPagoOrder.id),
         mercado_pago_payment_id: String(payment?.id || mercadoPagoOrder.id),
         mercado_pago_status: String(payment?.status || mercadoPagoOrder.status || 'action_required'),
         payment_updated_at: new Date().toISOString(),

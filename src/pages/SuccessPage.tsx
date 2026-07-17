@@ -7,7 +7,7 @@ import { calculateTotal } from '../data/products';
 import { eventInfo } from '../data/event';
 import logoPix from '../assets/logo-pix.png';
 import type { RegistrationSummary, Ticket as TicketType } from '../types';
-import { createMercadoPagoCheckout, createMercadoPagoPix, type MercadoPagoPix } from '../services/paymentService';
+import { createMercadoPagoCheckout, createMercadoPagoPix, syncMercadoPagoPayment, type MercadoPagoPix } from '../services/paymentService';
 import { getTicketByCode } from '../services/registrationService';
 import { formatCurrency } from '../utils/format';
 import { createTicketPdfBlob, downloadBlob, ticketPdfFileName } from '../utils/ticketPdf';
@@ -37,12 +37,14 @@ export function SuccessPage() {
 
   useEffect(() => {
     if (!summary) return;
+    const currentSummary = summary;
     let active = true;
-    const summaryTickets = summary.tickets?.length
-      ? summary.tickets
-      : [{ registrationNumber: summary.registrationNumber, ticketCode: summary.ticketCode, name: summary.name }];
+    const summaryTickets = currentSummary.tickets?.length
+      ? currentSummary.tickets
+      : [{ registrationNumber: currentSummary.registrationNumber, ticketCode: currentSummary.ticketCode, name: currentSummary.name }];
 
     async function checkPayment() {
+      await syncMercadoPagoPayment(currentSummary.registrationNumber, currentSummary.ticketCode).catch(() => undefined);
       const results = await Promise.all(summaryTickets.map((ticket) => getTicketByCode(ticket.ticketCode).catch(() => null)));
       if (!active) return;
       const paidTickets = results.filter((ticket): ticket is TicketType => ticket?.payment_status === 'paid');
@@ -50,7 +52,7 @@ export function SuccessPage() {
       if (paidTickets.length === summaryTickets.length) window.clearInterval(intervalId);
     }
 
-    const intervalId = window.setInterval(checkPayment, 4000);
+    const intervalId = window.setInterval(checkPayment, 6000);
     void checkPayment();
     return () => {
       active = false;
