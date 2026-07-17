@@ -108,7 +108,7 @@ export function HomePage() {
             {speakers.map((speaker) => (
               <article key={speaker.name} className="overflow-hidden rounded-lg border border-slate-100 bg-background text-center">
                 <div className="aspect-[4/5] bg-slate-100">
-                  <img src={speaker.image} alt={speaker.name} className="h-full w-full object-cover object-top" />
+                  <img src={speaker.image} alt={speaker.name} loading="lazy" decoding="async" className="h-full w-full object-cover object-top" />
                 </div>
                 <div className="p-5 sm:p-6">
                 <h3 className="mt-5 text-xl font-bold text-dark">{speaker.name}</h3>
@@ -186,7 +186,7 @@ function ProductCard({ title, image, price, description = 'Tamanhos PP, P, M, G,
   return (
     <article className="isolate overflow-hidden rounded-lg border border-slate-100 bg-background">
       <div className="relative z-0 grid h-56 place-items-center overflow-hidden bg-white p-3">
-        <img src={image} alt={title} className="block h-full w-full rounded-md object-contain" />
+        <img src={image} alt={title} loading="lazy" decoding="async" className="block h-full w-full rounded-md object-contain" />
       </div>
       <div className="relative z-10 bg-background p-6">
         <h3 className="text-xl font-bold text-dark">{title}</h3>

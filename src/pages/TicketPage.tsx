@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Download, Loader2, QrCode, ShieldCheck, ShieldX, UserRound } from 'lucide-react';
+import { AlertCircle, CheckCircle2, Download, Loader2, QrCode, ScanLine, ShieldCheck, ShieldX, UserRound } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
@@ -8,6 +8,8 @@ import { getTicketByCode } from '../services/registrationService';
 import type { Ticket as TicketType } from '../types';
 import { createTicketPdfBlob, downloadBlob, ticketPdfFileName } from '../utils/ticketPdf';
 import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
+import { supabase } from '../services/supabase';
+import { checkInTicket, type CheckInResult } from '../services/checkInService';
 
 export function TicketPage() {
   const { codigo } = useParams();
@@ -17,6 +19,9 @@ export function TicketPage() {
   const [pdfLoading, setPdfLoading] = useState(false);
   const [shareLoading, setShareLoading] = useState(false);
   const [actionError, setActionError] = useState('');
+  const [staffAuthenticated, setStaffAuthenticated] = useState(false);
+  const [checkInLoading, setCheckInLoading] = useState(false);
+  const [checkInResult, setCheckInResult] = useState<CheckInResult | null>(null);
 
   useEffect(() => {
     async function loadTicket() {
@@ -32,6 +37,10 @@ export function TicketPage() {
     }
     loadTicket();
   }, [codigo]);
+
+  useEffect(() => {
+    void supabase?.auth.getSession().then(({ data }) => setStaffAuthenticated(Boolean(data.session)));
+  }, []);
 
   const ticketUrl = `${env.publicSiteUrl}/ingresso/${codigo ?? ''}`;
   const isPaid = ticket?.payment_status === 'paid';
@@ -89,6 +98,18 @@ export function TicketPage() {
     } finally {
       setShareLoading(false);
     }
+  }
+
+  async function handleCheckIn() {
+    if (!ticket) return;
+    setActionError(''); setCheckInLoading(true);
+    try {
+      const result = await checkInTicket(ticket.ticket_code);
+      setCheckInResult(result);
+      if (result.result === 'accepted' || result.result === 'already_used') setTicket((current) => current ? { ...current, checked_in: true } : current);
+    } catch (checkInError) {
+      setActionError(checkInError instanceof Error ? checkInError.message : 'Não foi possível registrar a entrada.');
+    } finally { setCheckInLoading(false); }
   }
 
   return (
@@ -153,6 +174,17 @@ export function TicketPage() {
                     : 'Pagamento ainda não aprovado. Entrada não autorizada.'}
               </p>
             </div>
+
+            {staffAuthenticated && (
+              <div className="mt-5 rounded-lg border-2 border-primary/30 bg-primary/5 p-4">
+                <p className="text-sm font-bold uppercase tracking-wide text-primary">Área da equipe</p>
+                <button type="button" className="btn-primary mt-3 w-full" onClick={handleCheckIn} disabled={checkInLoading || ticket.checked_in || !isPaid}>
+                  {checkInLoading ? <Loader2 className="animate-spin" size={18} /> : <ScanLine size={18} />}
+                  {ticket.checked_in ? 'Entrada já registrada' : 'Registrar entrada agora'}
+                </button>
+                {checkInResult && <p className="mt-3 text-center font-bold" role="status">{checkInResult.result === 'accepted' ? 'Entrada autorizada e registrada.' : checkInResult.result === 'already_used' ? 'Este ingresso já havia sido utilizado.' : checkInResult.result === 'unpaid' ? 'Pagamento não confirmado.' : 'Ingresso não encontrado.'}</p>}
+              </div>
+            )}
 
             <div className={`mt-4 flex items-center gap-3 rounded-md p-4 ${isPaid ? 'bg-success/10 text-success' : 'bg-warning/10 text-text'}`}>
               {isPaid ? <CheckCircle2 /> : <AlertCircle />}

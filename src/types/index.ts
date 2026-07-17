@@ -21,6 +21,7 @@ export type RegistrationSummary = {
   wantsMug: boolean;
   mugQuantity: number;
   totalAmount: number;
+  recoveryToken?: string;
 };
 
 export type Ticket = {

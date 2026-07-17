@@ -4,7 +4,9 @@ import { env, isSupabaseConfigured } from '../config/env';
 export const supabase = isSupabaseConfigured
   ? createClient(env.supabaseUrl!, env.supabaseAnonKey!, {
       auth: {
-        persistSession: false,
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
       },
     })
   : null;

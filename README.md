@@ -1,72 +1,67 @@
 # Entre Nós Experience
 
-MVP em React + Vite para divulgação do evento, inscrição de participantes, captação de patrocinadores e ingresso digital com QR Code.
+Site responsivo do evento, com inscrições de múltiplos titulares, produtos, Pix/Checkout Mercado Pago, ingresso digital em PDF, recuperação segura e check-in autenticado.
 
-## Tecnologias
-
-- React, Vite e TypeScript
-- Tailwind CSS
-- React Router
-- React Hook Form + Zod
-- Supabase
-- qrcode.react
-- Lucide React
-
-## Rodar localmente
+## Desenvolvimento
 
 ```bash
 npm install
 npm run dev
+npm run check
 ```
 
-Crie um `.env` a partir do `.env.example`:
+Variáveis públicas do frontend:
 
 ```env
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=
-VITE_PAYMENT_URL=
 VITE_WHATSAPP_NUMBER=
+VITE_INSTAGRAM_USERNAME=
 VITE_PUBLIC_SITE_URL=
 ```
 
-Os preços de camiseta e botton são provisórios e ficam em `src/data/products.ts`.
+Nunca coloque Access Token, `service_role`, segredo de webhook ou senha em variável `VITE_`.
 
-## Supabase
+## Arquitetura de segurança
 
-1. Crie um projeto no Supabase.
-2. Abra o SQL Editor.
-3. Execute o arquivo `supabase/schema.sql`.
-4. Copie `Project URL` para `VITE_SUPABASE_URL`.
-5. Copie a chave `anon public` para `VITE_SUPABASE_ANON_KEY`.
-6. Nunca use a chave `service_role` no frontend.
+- Inscrições e propostas de patrocínio são criadas por Edge Functions, nunca por inserção anônima direta.
+- Números de inscrição, códigos dos ingressos e códigos de recuperação usam aleatoriedade criptográfica.
+- Valores são recalculados no servidor a partir do catálogo em `supabase/functions/_shared/catalog.ts`.
+- O webhook valida a assinatura do Mercado Pago; uma conciliação agendada cobre notificações perdidas e reembolsos.
+- O check-in exige autenticação da equipe e usa uma operação atômica no banco.
+- A leitura pública do ingresso expõe apenas nome, código, pagamento e situação da entrada.
 
-O RLS permite inserção pública em `registrations` e `sponsor_requests`, bloqueia leitura pública direta das tabelas e expõe somente a função `get_public_ticket(codigo)` para o ingresso digital.
+## Banco e funções
 
-## Confirmação manual de pagamento
+Para uma instalação nova, execute `supabase/schema.sql` e depois as migrations em ordem. Em ambiente existente, aplique somente as migrations ainda não executadas.
 
-Nesta versão, a equipe usa o painel do Supabase:
+Segredos necessários nas Edge Functions:
 
-1. Abra a tabela `registrations`.
-2. Localize a inscrição pelo número, nome, e-mail ou telefone.
-3. Verifique o comprovante enviado pelo WhatsApp.
-4. Altere `payment_status` de `pending` para `paid`.
-5. O ingresso público passará a mostrar "Ingresso confirmado".
+```text
+MERCADO_PAGO_ACCESS_TOKEN
+MERCADO_PAGO_WEBHOOK_SECRET
+PUBLIC_SITE_URL=https://entre-nos-eta.vercel.app
+RATE_LIMIT_SALT=<valor aleatório longo>
+CRON_SECRET=<valor aleatório longo>
+CHECKIN_STAFF_EMAILS=equipe1@exemplo.com,equipe2@exemplo.com
+```
 
-## Publicar na Vercel
+Crie os usuários da equipe em Supabase Auth e inclua os mesmos e-mails em `CHECKIN_STAFF_EMAILS`.
 
-1. Suba o projeto para um repositório Git.
-2. Importe o repositório na Vercel.
-3. Configure as variáveis de ambiente da produção.
-4. Use o build padrão: `npm run build`.
-5. Configure `VITE_PUBLIC_SITE_URL` com a URL pública final.
+## Publicação segura
 
-## Recursos deixados para a segunda versão
+1. Faça backup do banco.
+2. Aplique as migrations.
+3. Cadastre os segredos.
+4. Publique todas as Edge Functions.
+5. Configure os eventos `payment` e `order` no webhook do Mercado Pago.
+6. Agende `reconcile-mercado-pago` no Supabase Cron com `Authorization: Bearer <CRON_SECRET>` a cada 5 minutos.
+7. Publique o frontend somente depois de validar inscrição, Pix, aprovação, PDF, recuperação e check-in em um pedido controlado.
 
-- Painel administrativo próprio
-- Autenticação de administradores
-- Webhook automático do Mercado Pago
-- Check-in com leitor de QR Code
-- Gestão completa de lotes, cupons e estoque
-- Upload de imagens oficiais dos palestrantes e produtos
-# entre-nos
-# entre-nos
+## Operação no evento
+
+1. A equipe acessa `/equipe/login` no celular.
+2. Faz login com uma conta autorizada.
+3. Escaneia o QR Code com a câmera normal do celular; o link abre o ingresso.
+4. Toca em **Registrar entrada agora**.
+5. O primeiro uso é aceito; tentativas seguintes aparecem como ingresso já utilizado.

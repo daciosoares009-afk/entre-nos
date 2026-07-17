@@ -1,12 +1,11 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { catalog } from '../_shared/catalog.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
-
-const prices = { ticket: 15, shirt: 45, cup: 12, mug: 40 };
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
@@ -71,7 +70,7 @@ Deno.serve(async (request) => {
     const orderNumber = registration.order_number || registration.registration_number;
     const { data: orderRegistrations, error: orderError } = await supabase
       .from('registrations')
-      .select('registration_number,name,email,is_order_owner,wants_shirt,shirt_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity,payment_status')
+      .select('registration_number,name,email,is_order_owner,wants_shirt,shirt_quantity,wants_button,button_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity,payment_status')
       .eq('order_number', orderNumber);
 
     if (orderError || !orderRegistrations?.length) return json({ error: 'Compra não encontrada.' }, 404);
@@ -79,10 +78,11 @@ Deno.serve(async (request) => {
 
     const orderOwner = orderRegistrations.find((item) => item.is_order_owner) || orderRegistrations[0];
     const total =
-      orderRegistrations.length * prices.ticket +
-      (orderOwner.wants_shirt ? orderOwner.shirt_quantity * prices.shirt : 0) +
-      (orderOwner.wants_cup ? orderOwner.cup_quantity * prices.cup : 0) +
-      (orderOwner.wants_mug ? orderOwner.mug_quantity * prices.mug : 0);
+      orderRegistrations.length * catalog.ticket +
+      (orderOwner.wants_shirt ? orderOwner.shirt_quantity * catalog.shirt : 0) +
+      (orderOwner.wants_button ? orderOwner.button_quantity * catalog.button : 0) +
+      (orderOwner.wants_cup ? orderOwner.cup_quantity * catalog.cup : 0) +
+      (orderOwner.wants_mug ? orderOwner.mug_quantity * catalog.mug : 0);
     const amount = total.toFixed(2);
 
     const orderResponse = await fetch('https://api.mercadopago.com/v1/orders', {
@@ -90,7 +90,7 @@ Deno.serve(async (request) => {
       headers: {
         Authorization: `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
-        'X-Idempotency-Key': `entre-nos-pix-order-v2-${orderNumber}`,
+        'X-Idempotency-Key': `entre-nos-pix-${orderNumber}-${Math.floor(Date.now() / 600000)}`,
       },
       body: JSON.stringify({
         type: 'online',

@@ -63,6 +63,7 @@ export function RegistrationPage() {
     try {
       const summary = await createRegistration(data);
       sessionStorage.setItem('entre-nos-registration', JSON.stringify(summary));
+      localStorage.setItem('entre-nos-registration', JSON.stringify(summary));
       navigate('/sucesso');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível concluir a inscrição.');
@@ -95,7 +96,7 @@ export function RegistrationPage() {
               />
             </Field>
             <Field label="Idade" error={errors.age?.message}>
-              <input className="field" type="number" min={12} {...register('age')} />
+              <input className="field" type="number" min={18} {...register('age')} />
             </Field>
             <Field label="Cidade" error={errors.city?.message}>
               <input className="field" {...register('city')} />
@@ -199,11 +200,11 @@ export function RegistrationPage() {
 
           <div className="grid gap-3 text-sm">
             <Checkbox error={errors.acceptedTerms?.message} register={register('acceptedTerms')}>
-              Aceito os <Link className="font-semibold text-primary underline underline-offset-2" to="/termos" onClick={(event) => event.stopPropagation()}>Termos de Uso</Link>.
+              Aceito os <Link className="font-semibold text-primary underline underline-offset-2" to="/termos" target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>Termos de Uso</Link>.
             </Checkbox>
             <Checkbox label="Autorizo o uso de imagem em registros do evento." register={register('imageAuthorization')} />
             <Checkbox error={errors.privacyConsent?.message} register={register('privacyConsent')}>
-              Consinto com o tratamento dos meus dados conforme a <Link className="font-semibold text-primary underline underline-offset-2" to="/privacidade" onClick={(event) => event.stopPropagation()}>LGPD e a Política de Privacidade</Link>.
+              Declaro que li a <Link className="font-semibold text-primary underline underline-offset-2" to="/privacidade" target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()}>Política de Privacidade e as informações sobre a LGPD</Link>.
             </Checkbox>
           </div>
 
@@ -231,7 +232,7 @@ function ProductInterest({ title, description, image, price, checked, checkbox, 
   return (
     <article className="isolate overflow-hidden rounded-lg border border-slate-200 bg-background">
       <div className="relative z-0 aspect-[4/3] overflow-hidden bg-white">
-        <img src={image} alt={title} className="block h-full w-full object-cover" />
+        <img src={image} alt={title} loading="lazy" decoding="async" className="block h-full w-full object-cover" />
       </div>
       <div className="relative z-10 bg-background p-4">
         <label className="flex cursor-pointer items-start gap-3 font-semibold text-dark">

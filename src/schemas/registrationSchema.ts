@@ -6,7 +6,7 @@ export const registrationSchema = z
     name: z.string().min(3, 'Informe seu nome completo.').max(120),
     email: z.string().email('Informe um e-mail válido.'),
     phone: z.string().min(14, 'Informe um telefone válido.'),
-    age: z.coerce.number().int().min(12, 'Idade mínima: 12 anos.').max(120),
+    age: z.coerce.number().int().min(18, 'Inscrições online disponíveis para maiores de 18 anos.').max(120),
     city: z.string().min(2, 'Informe sua cidade.').max(80),
     state: z.string().min(2, 'Informe seu estado.').max(2, 'Use a sigla do estado.'),
     ticketQuantity: z.coerce.number().int().min(1).max(10).default(1),
@@ -23,7 +23,7 @@ export const registrationSchema = z
     mugQuantity: z.coerce.number().int().min(1).max(20).default(1),
     acceptedTerms: z.literal(true, { errorMap: () => ({ message: 'Você precisa aceitar os termos.' }) }),
     imageAuthorization: z.boolean().default(false),
-    privacyConsent: z.literal(true, { errorMap: () => ({ message: 'O consentimento LGPD é obrigatório.' }) }),
+    privacyConsent: z.literal(true, { errorMap: () => ({ message: 'Confirme a leitura da Política de Privacidade.' }) }),
   })
   .superRefine((data, ctx) => {
     const expectedAdditionalNames = data.ticketQuantity - 1;

@@ -1,4 +1,5 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { catalog } from '../_shared/catalog.ts';
 
 function getServiceRoleKey() {
   const legacyKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
@@ -83,17 +84,18 @@ Deno.serve(async (request) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
     const { data: orderRegistrations, error: lookupError } = await supabase
       .from('registrations')
-      .select('is_order_owner,wants_shirt,shirt_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity')
+      .select('is_order_owner,wants_shirt,shirt_quantity,wants_button,button_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity')
       .eq('order_number', orderNumber);
     if (lookupError || !orderRegistrations?.length) return new Response('registration not found', { status: 404 });
 
     const orderOwner = orderRegistrations.find((item) => item.is_order_owner) || orderRegistrations[0];
 
     const expectedAmount =
-      orderRegistrations.length * 15 +
-      (orderOwner.wants_shirt ? orderOwner.shirt_quantity * 45 : 0) +
-      (orderOwner.wants_cup ? orderOwner.cup_quantity * 12 : 0) +
-      (orderOwner.wants_mug ? orderOwner.mug_quantity * 40 : 0);
+      orderRegistrations.length * catalog.ticket +
+      (orderOwner.wants_shirt ? orderOwner.shirt_quantity * catalog.shirt : 0) +
+      (orderOwner.wants_button ? orderOwner.button_quantity * catalog.button : 0) +
+      (orderOwner.wants_cup ? orderOwner.cup_quantity * catalog.cup : 0) +
+      (orderOwner.wants_mug ? orderOwner.mug_quantity * catalog.mug : 0);
     const receivedAmount = Number(eventType === 'order' ? resource.total_amount : resource.transaction_amount);
     const amountMatches = Math.abs(expectedAmount - receivedAmount) < 0.01;
     const providerStatus = String(eventType === 'order' ? resource.status : resource.status);
@@ -115,6 +117,14 @@ Deno.serve(async (request) => {
       .eq('order_number', orderNumber);
 
     if (updateError) return new Response('database update failed', { status: 500 });
+    await supabase.from('payment_audit_log').insert({
+      order_number: orderNumber,
+      source: `webhook_${eventType}`,
+      provider_id: String(eventType === 'order' ? orderPayment?.id || resource.id : resource.id),
+      provider_status: providerStatus,
+      local_status: status,
+      detail: { status_detail: providerStatusDetail, amount_matches: amountMatches },
+    });
     return new Response('ok', { status: 200 });
   } catch (error) {
     console.error('Mercado Pago webhook error', error);

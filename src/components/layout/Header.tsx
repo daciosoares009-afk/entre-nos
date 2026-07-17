@@ -1,5 +1,5 @@
 import { Menu, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink } from 'react-router-dom';
 import logoEntreNos from '../../assets/logo-entre-nos-experience-transparent.png';
 
@@ -13,6 +13,12 @@ const navItems = [
 
 export function Header() {
   const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    function closeOnEscape(event: KeyboardEvent) { if (event.key === 'Escape') setOpen(false); }
+    window.addEventListener('keydown', closeOnEscape);
+    return () => window.removeEventListener('keydown', closeOnEscape);
+  }, []);
 
   return (
     <header className="sticky top-0 z-40 border-b border-slate-100 bg-white/95 backdrop-blur">
@@ -45,13 +51,13 @@ export function Header() {
           </Link>
         </div>
 
-        <button className="grid h-11 w-11 shrink-0 place-items-center rounded-md text-dark transition hover:bg-background lg:hidden" onClick={() => setOpen((value) => !value)} aria-label={open ? 'Fechar menu' : 'Abrir menu'} aria-expanded={open}>
+        <button className="grid h-11 w-11 shrink-0 place-items-center rounded-md text-dark transition hover:bg-background lg:hidden" onClick={() => setOpen((value) => !value)} aria-label={open ? 'Fechar menu' : 'Abrir menu'} aria-expanded={open} aria-controls="mobile-navigation">
           {open ? <X size={22} /> : <Menu size={22} />}
         </button>
       </div>
 
       {open && (
-        <div className="border-t border-slate-100 bg-white lg:hidden">
+        <div id="mobile-navigation" className="border-t border-slate-100 bg-white lg:hidden">
           <div className="container-page grid gap-1 py-3">
             {navItems.map((item) => (
               <a key={item.label} href={item.href} onClick={() => setOpen(false)} className="flex min-h-11 items-center rounded-md px-3 py-2 text-sm font-medium text-muted hover:bg-background hover:text-primary">

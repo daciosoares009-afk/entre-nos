@@ -14,7 +14,7 @@ import { createTicketPdfBlob, downloadBlob, ticketPdfFileName } from '../utils/t
 import { WhatsAppIcon } from '../components/ui/WhatsAppIcon';
 
 function getSummary(): RegistrationSummary | null {
-  const raw = sessionStorage.getItem('entre-nos-registration');
+  const raw = sessionStorage.getItem('entre-nos-registration') || localStorage.getItem('entre-nos-registration');
   if (!raw) return null;
   try {
     return JSON.parse(raw) as RegistrationSummary;
@@ -177,6 +177,13 @@ export function SuccessPage() {
         <div className="mt-6 rounded-lg border border-slate-100 bg-background p-5">
           <p className="text-sm text-muted">Número da inscrição</p>
           <p className="break-words text-xl font-bold text-primary sm:text-2xl">{summary.registrationNumber}</p>
+          {summary.recoveryToken && (
+            <div className="mt-4 rounded-md border border-primary/20 bg-white p-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-muted">Código de recuperação</p>
+              <p className="mt-1 break-all font-mono text-sm font-bold text-dark">{summary.recoveryToken}</p>
+              <p className="mt-1 text-xs leading-5 text-muted">Guarde este código com o número da inscrição. Ele permite recuperar seus ingressos em outro aparelho.</p>
+            </div>
+          )}
           <div className="mt-5 grid gap-3 text-sm sm:grid-cols-2">
             <span>Ingressos: {tickets.length}</span>
             <span>Camiseta: {summary.wantsShirt ? `${summary.shirtQuantity} ${summary.shirtColor} ${summary.shirtSize}` : 'Não selecionada'}</span>

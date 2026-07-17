@@ -23,6 +23,9 @@ export function Footer() {
             <WhatsAppIcon className="h-8 w-8 shrink-0 rounded-lg object-cover shadow-[0_6px_16px_rgba(37,211,102,0.22)]" aria-hidden="true" />
             WhatsApp
           </a>
+          <Link className="whitespace-nowrap transition hover:text-primary" to="/recuperar">
+            Recuperar ingresso
+          </Link>
           <Link className="whitespace-nowrap transition hover:text-primary" to="/privacidade">
             Privacidade
           </Link>

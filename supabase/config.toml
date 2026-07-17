@@ -9,3 +9,18 @@ verify_jwt = false
 
 [functions.mercado-pago-webhook]
 verify_jwt = false
+
+[functions.create-registration]
+verify_jwt = false
+
+[functions.create-sponsor-request]
+verify_jwt = false
+
+[functions.check-in-ticket]
+verify_jwt = true
+
+[functions.reconcile-mercado-pago]
+verify_jwt = false
+
+[functions.recover-registration]
+verify_jwt = false

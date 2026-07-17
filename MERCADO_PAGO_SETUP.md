@@ -1,53 +1,48 @@
-# Mercado Pago Checkout Pro
+# Mercado Pago — configuração de produção
 
-## Componentes implementados
+## Credenciais
 
-- `create-mercado-pago-preference`: recria os itens e preços no servidor e retorna a URL segura do Checkout Pro.
-- `mercado-pago-webhook`: valida a assinatura HMAC, consulta o pagamento no Mercado Pago e atualiza o ingresso.
-- Botão `Pagar com Mercado Pago` na página de sucesso.
-- Retornos para pagamentos aprovados, pendentes ou não concluídos.
+Use o Access Token de produção do vendedor no segredo `MERCADO_PAGO_ACCESS_TOKEN`. Não use Public Key, token do comprador, credencial de teste, `Bearer`, aspas ou espaços extras.
 
-## 1. Atualizar o banco
+## Webhook
 
-No Supabase, abra **SQL Editor**, cole o conteúdo de `supabase/schema.sql` e execute. Os comandos `add column if not exists` preservam os registros existentes.
-
-## 2. Conferir os segredos
-
-Em **Edge Functions > Secrets**, devem existir:
-
-```text
-MERCADO_PAGO_ACCESS_TOKEN
-MERCADO_PAGO_WEBHOOK_SECRET
-PUBLIC_SITE_URL=https://entre-nos-eta.vercel.app
-```
-
-Nunca use o prefixo `VITE_` para credenciais privadas.
-
-## 3. Publicar as funções
-
-Com o Supabase CLI autenticado e o projeto vinculado:
-
-```bash
-supabase functions deploy create-mercado-pago-preference
-supabase functions deploy mercado-pago-webhook --no-verify-jwt
-```
-
-## 4. Configurar o webhook no Mercado Pago
-
-Em **Suas integrações > Entre Nós Experience > Webhooks**, adicione:
+URL:
 
 ```text
 https://nfsqbszrmrjjgnxzagig.supabase.co/functions/v1/mercado-pago-webhook
 ```
 
-Ative o evento **Pagamentos**. A assinatura secreta exibida nessa configuração deve ser igual ao valor salvo em `MERCADO_PAGO_WEBHOOK_SECRET` no Supabase.
+Cadastre os eventos de **Pagamentos** e **Orders**. Copie o segredo da assinatura da configuração atual para `MERCADO_PAGO_WEBHOOK_SECRET`; ao criar uma aplicação nova, o segredo antigo não serve.
 
-## 5. Validar antes de divulgar
+## Fluxos disponíveis
 
-1. Faça uma nova inscrição selecionando ao menos um produto.
-2. Clique em **Pagar com Mercado Pago**.
-3. Conclua o pagamento.
-4. Aguarde a notificação e abra o ingresso digital.
-5. Confirme no Supabase que `payment_status` mudou para `paid` e que `mercado_pago_payment_id` foi preenchido.
+- `create-mercado-pago-pix`: cria Pix Copia e Cola/QR Code para qualquer banco.
+- `create-mercado-pago-preference`: mantém as demais formas permitidas pelo Checkout Pro.
+- `mercado-pago-webhook`: recebe notificações assinadas.
+- `sync-mercado-pago-payment`: consulta um pedido quando o comprador está na página.
+- `reconcile-mercado-pago`: verifica periodicamente pagamentos, estornos e reembolsos sem depender do navegador do comprador.
 
-Com credenciais de produção, todas as cobranças são reais.
+## Conciliação automática
+
+Agende uma chamada POST a cada 5 minutos para:
+
+```text
+https://nfsqbszrmrjjgnxzagig.supabase.co/functions/v1/reconcile-mercado-pago
+```
+
+Cabeçalho:
+
+```text
+Authorization: Bearer <CRON_SECRET>
+```
+
+O resultado informa `checked`, `updated` e `failed`. Mudanças de estado ficam em `payment_audit_log`.
+
+## Checklist
+
+1. Criar uma inscrição de teste operacional com e-mail real.
+2. Confirmar que o total inclui ingressos e produtos.
+3. Gerar Pix e pagar por uma conta diferente da conta vendedora.
+4. Confirmar `payment_status = paid` sem manter a página aberta.
+5. Baixar o PDF e abrir o QR Code.
+6. Fazer o primeiro check-in e tentar novamente para confirmar o bloqueio de duplicidade.

@@ -1,11 +1,12 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { catalog } from '../_shared/catalog.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
-const prices = { ticket: 15, shirt: 45, cup: 12, mug: 40 };
+const prices = catalog;
 const defaultSiteUrl = 'https://entre-nos-eta.vercel.app';
 
 function getPublicSiteOrigin(value: string | undefined) {
@@ -65,7 +66,7 @@ Deno.serve(async (request) => {
     const orderNumber = registration.order_number || registration.registration_number;
     const { data: orderRegistrations, error: orderError } = await supabase
       .from('registrations')
-      .select('registration_number,name,email,is_order_owner,wants_shirt,shirt_color,shirt_size,shirt_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity,payment_status')
+      .select('registration_number,name,email,is_order_owner,wants_shirt,shirt_color,shirt_size,shirt_quantity,wants_button,button_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity,payment_status')
       .eq('order_number', orderNumber);
 
     if (orderError || !orderRegistrations?.length) return json({ error: 'Compra não encontrada.' }, 404);
@@ -79,6 +80,9 @@ Deno.serve(async (request) => {
     ];
     if (orderOwner.wants_shirt && orderOwner.shirt_quantity > 0) {
       items.push({ id: 'camiseta-entre-nos', title: `Camiseta Entre Nós - ${orderOwner.shirt_color} ${orderOwner.shirt_size}`, quantity: orderOwner.shirt_quantity, currency_id: 'BRL', unit_price: prices.shirt });
+    }
+    if (orderOwner.wants_button && orderOwner.button_quantity > 0) {
+      items.push({ id: 'botton-entre-nos', title: 'Botton Entre Nós', quantity: orderOwner.button_quantity, currency_id: 'BRL', unit_price: prices.button });
     }
     if (orderOwner.wants_cup && orderOwner.cup_quantity > 0) {
       items.push({ id: 'copo-entre-nos', title: 'Copo acrílico Entre Nós', quantity: orderOwner.cup_quantity, currency_id: 'BRL', unit_price: prices.cup });
