@@ -15,8 +15,6 @@ export const registrationSchema = z
     shirtColor: z.enum(productConfig.shirtColors).optional().or(z.literal('')),
     shirtSize: z.enum(productConfig.shirtSizes).optional().or(z.literal('')),
     shirtQuantity: z.coerce.number().int().min(1).max(10).default(1),
-    wantsButton: z.boolean().default(false),
-    buttonQuantity: z.coerce.number().int().min(1).max(20).default(1),
     wantsCup: z.boolean().default(false),
     cupQuantity: z.coerce.number().int().min(1).max(20).default(1),
     wantsMug: z.boolean().default(false),

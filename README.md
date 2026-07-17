@@ -18,6 +18,7 @@ VITE_SUPABASE_ANON_KEY=
 VITE_WHATSAPP_NUMBER=
 VITE_INSTAGRAM_USERNAME=
 VITE_PUBLIC_SITE_URL=
+VITE_TURNSTILE_SITE_KEY=
 ```
 
 Nunca coloque Access Token, `service_role`, segredo de webhook ou senha em variável `VITE_`.
@@ -44,7 +45,18 @@ PUBLIC_SITE_URL=https://entre-nos-eta.vercel.app
 RATE_LIMIT_SALT=<valor aleatório longo>
 CRON_SECRET=<valor aleatório longo>
 CHECKIN_STAFF_EMAILS=equipe1@exemplo.com,equipe2@exemplo.com
+TURNSTILE_SECRET_KEY=<secret key do widget Cloudflare Turnstile>
 ```
+
+## Cloudflare Turnstile
+
+1. No painel da Cloudflare, crie um widget Turnstile do tipo **Managed**.
+2. Autorize o hostname `entre-nos-eta.vercel.app`.
+3. Na Vercel, salve a site key pública como `VITE_TURNSTILE_SITE_KEY`.
+4. No Supabase, em **Edge Functions > Secrets**, salve a secret key como `TURNSTILE_SECRET_KEY` (sem prefixo `VITE_`).
+5. Aplique a migration `20260717050000_turnstile_verification.sql` antes de publicar as Edge Functions atualizadas.
+
+Os tokens são validados no servidor pela API Siteverify. As inscrições antigas são preservadas pela migration; novos cadastros e propostas exigem uma validação válida.
 
 Crie os usuários da equipe em Supabase Auth e inclua os mesmos e-mails em `CHECKIN_STAFF_EMAILS`.
 

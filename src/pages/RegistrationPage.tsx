@@ -11,10 +11,13 @@ import { productConfig } from '../data/products';
 import { registrationSchema, type RegistrationFormData } from '../schemas/registrationSchema';
 import { createRegistration } from '../services/registrationService';
 import { formatCurrency, maskPhone } from '../utils/format';
+import { TurnstileWidget } from '../components/ui/TurnstileWidget';
 
 export function RegistrationPage() {
   const navigate = useNavigate();
   const [error, setError] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const {
     register,
     handleSubmit,
@@ -29,8 +32,6 @@ export function RegistrationPage() {
       shirtColor: '',
       shirtSize: '',
       shirtQuantity: 1,
-      wantsButton: false,
-      buttonQuantity: 1,
       wantsCup: false,
       cupQuantity: 1,
       wantsMug: false,
@@ -61,12 +62,14 @@ export function RegistrationPage() {
   async function onSubmit(data: RegistrationFormData) {
     setError('');
     try {
-      const summary = await createRegistration(data);
+      if (!turnstileToken) throw new Error('Conclua a verificação de segurança.');
+      const summary = await createRegistration(data, turnstileToken);
       sessionStorage.setItem('entre-nos-registration', JSON.stringify(summary));
       localStorage.setItem('entre-nos-registration', JSON.stringify(summary));
       navigate('/sucesso');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível concluir a inscrição.');
+      setTurnstileResetKey((value) => value + 1);
     }
   }
 
@@ -208,7 +211,9 @@ export function RegistrationPage() {
             </Checkbox>
           </div>
 
-          <button className="btn-primary w-full" disabled={isSubmitting}>
+          <TurnstileWidget action="registration" onTokenChange={setTurnstileToken} resetKey={turnstileResetKey} />
+
+          <button className="btn-primary w-full" disabled={isSubmitting || !turnstileToken}>
             {isSubmitting && <Loader2 className="animate-spin" size={18} />}
             Enviar inscrição
           </button>

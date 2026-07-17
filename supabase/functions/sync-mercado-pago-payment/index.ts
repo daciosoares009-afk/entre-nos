@@ -1,8 +1,9 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { catalog } from '../_shared/catalog.ts';
 
+const defaultSiteUrl = 'https://entre-nos-eta.vercel.app';
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': Deno.env.get('PUBLIC_SITE_URL') || defaultSiteUrl,
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
@@ -63,14 +64,13 @@ Deno.serve(async (request) => {
     const orderNumber = registration.order_number || registration.registration_number;
     const { data: orderRegistrations } = await supabase
       .from('registrations')
-      .select('is_order_owner,wants_shirt,shirt_quantity,wants_button,button_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity,payment_status,mercado_pago_preference_id')
+      .select('is_order_owner,wants_shirt,shirt_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity,payment_status,mercado_pago_preference_id')
       .eq('order_number', orderNumber);
     if (!orderRegistrations?.length) return json({ error: 'Compra não encontrada.' }, 404);
     const owner = orderRegistrations.find((item) => item.is_order_owner) || orderRegistrations[0];
     const expectedAmount =
       orderRegistrations.length * catalog.ticket +
       (owner.wants_shirt ? owner.shirt_quantity * catalog.shirt : 0) +
-      (owner.wants_button ? owner.button_quantity * catalog.button : 0) +
       (owner.wants_cup ? owner.cup_quantity * catalog.cup : 0) +
       (owner.wants_mug ? owner.mug_quantity * catalog.mug : 0);
 

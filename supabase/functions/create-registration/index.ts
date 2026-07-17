@@ -1,6 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { calculateServerTotal, catalog } from '../_shared/catalog.ts';
 import { cleanText, corsHeaders, getServiceRoleKey, json, sha256 } from '../_shared/http.ts';
+import { verifyTurnstile } from '../_shared/turnstile.ts';
 
 const alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 function randomCode(length: number) {
@@ -35,6 +36,7 @@ Deno.serve(async (request) => {
     if (allowed === false) return json({ error: 'Muitas tentativas. Aguarde uma hora ou fale com o suporte.' }, 429);
 
     const body = await request.json();
+    if (!(await verifyTurnstile(request, body.turnstileToken, 'registration'))) return json({ error: 'Verificação de segurança inválida ou expirada. Tente novamente.' }, 403);
     if (body.acceptedTerms !== true || body.privacyConsent !== true) return json({ error: 'Aceite os termos e a Política de Privacidade.' }, 400);
     const name = requiredText(body.name, 3, 120);
     const email = cleanText(body.email, 160).toLowerCase();
@@ -51,11 +53,9 @@ Deno.serve(async (request) => {
     if (new Set(holderNames.map((item) => item.toLocaleLowerCase('pt-BR'))).size !== holderNames.length) return json({ error: 'Cada ingresso precisa ter um titular diferente.' }, 400);
 
     const wantsShirt = body.wantsShirt === true;
-    const wantsButton = body.wantsButton === true;
     const wantsCup = body.wantsCup === true;
     const wantsMug = body.wantsMug === true;
     const shirtQuantity = wantsShirt ? integer(body.shirtQuantity ?? 1, 1, 10) : 0;
-    const buttonQuantity = wantsButton ? integer(body.buttonQuantity ?? 1, 1, 20) : 0;
     const cupQuantity = wantsCup ? integer(body.cupQuantity ?? 1, 1, 20) : 0;
     const mugQuantity = wantsMug ? integer(body.mugQuantity ?? 1, 1, 20) : 0;
     const shirtColor = wantsShirt ? cleanText(body.shirtColor, 10) : null;
@@ -68,20 +68,19 @@ Deno.serve(async (request) => {
     const recoveryToken = randomCode(32);
     const recoveryTokenHash = await sha256(recoveryToken);
     const tickets = holderNames.map((holderName, index) => ({ name: holderName, registrationNumber: index === 0 ? registrationNumber : `${registrationNumber}-${index + 1}`, ticketCode: `EN-${randomCode(20)}` }));
-    const totalAmount = calculateServerTotal({ ticketQuantity, wantsShirt, shirtQuantity, wantsButton, buttonQuantity, wantsCup, cupQuantity, wantsMug, mugQuantity });
-    const common = { email, phone, age, city, state, payment_status: 'pending', checked_in: false, accepted_terms: true, image_authorization: body.imageAuthorization === true, privacy_consent: true, terms_version: '2026-07-17', privacy_version: '2026-07-17' };
+    const totalAmount = calculateServerTotal({ ticketQuantity, wantsShirt, shirtQuantity, wantsCup, cupQuantity, wantsMug, mugQuantity });
+    const common = { email, phone, age, city, state, payment_status: 'pending', checked_in: false, accepted_terms: true, image_authorization: body.imageAuthorization === true, privacy_consent: true, terms_version: '2026-07-17', privacy_version: '2026-07-17', turnstile_verified_at: new Date().toISOString() };
     const payload = tickets.map((ticket, index) => ({
       ...common, registration_number: ticket.registrationNumber, order_number: registrationNumber, is_order_owner: index === 0, name: ticket.name, ticket_code: ticket.ticketCode,
       recovery_token_hash: index === 0 ? recoveryTokenHash : null,
       wants_shirt: index === 0 && wantsShirt, shirt_color: index === 0 ? shirtColor : null, shirt_size: index === 0 ? shirtSize : null, shirt_quantity: index === 0 ? shirtQuantity : 0,
-      wants_button: index === 0 && wantsButton, button_quantity: index === 0 ? buttonQuantity : 0,
       wants_cup: index === 0 && wantsCup, cup_quantity: index === 0 ? cupQuantity : 0,
       wants_mug: index === 0 && wantsMug, mug_quantity: index === 0 ? mugQuantity : 0,
       total_amount: index === 0 ? totalAmount : catalog.ticket,
     }));
     const { error } = await supabase.from('registrations').insert(payload);
     if (error) { console.error('Registration insert error', error); return json({ error: 'Não foi possível concluir a inscrição. Tente novamente.' }, 500); }
-    return json({ registrationNumber, ticketCode: tickets[0].ticketCode, recoveryToken, name, ticketQuantity, tickets, wantsShirt, shirtColor, shirtSize, shirtQuantity, wantsButton, buttonQuantity, wantsCup, cupQuantity, wantsMug, mugQuantity, totalAmount }, 201);
+    return json({ registrationNumber, ticketCode: tickets[0].ticketCode, recoveryToken, name, ticketQuantity, tickets, wantsShirt, shirtColor, shirtSize, shirtQuantity, wantsCup, cupQuantity, wantsMug, mugQuantity, totalAmount }, 201);
   } catch (error) {
     console.error('Create registration error', error);
     return json({ error: error instanceof Error ? error.message : 'Dados da inscrição inválidos.' }, 400);

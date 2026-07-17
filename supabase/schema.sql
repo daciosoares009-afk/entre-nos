@@ -15,8 +15,6 @@ create table if not exists public.registrations (
   shirt_color text check (shirt_color in ('branca', 'preta') or shirt_color is null),
   shirt_size text check (shirt_size in ('PP', 'P', 'M', 'G', 'GG', 'XGG') or shirt_size is null),
   shirt_quantity integer not null default 0 check (shirt_quantity between 0 and 10),
-  wants_button boolean not null default false,
-  button_quantity integer not null default 0 check (button_quantity between 0 and 20),
   wants_cup boolean not null default false,
   cup_quantity integer not null default 0 check (cup_quantity between 0 and 20),
   wants_mug boolean not null default false,
@@ -33,6 +31,7 @@ create table if not exists public.registrations (
   accepted_terms boolean not null check (accepted_terms = true),
   image_authorization boolean not null default false,
   privacy_consent boolean not null check (privacy_consent = true),
+  turnstile_verified_at timestamptz,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );

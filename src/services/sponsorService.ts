@@ -1,9 +1,9 @@
 import type { SponsorFormData } from '../schemas/sponsorSchema';
 import { supabase } from './supabase';
 
-export async function createSponsorRequest(data: SponsorFormData) {
+export async function createSponsorRequest(data: SponsorFormData, turnstileToken: string) {
   if (!supabase) throw new Error('Supabase não configurado.');
-  const { error } = await supabase.functions.invoke('create-sponsor-request', { body: data });
+  const { error } = await supabase.functions.invoke('create-sponsor-request', { body: { ...data, turnstileToken } });
   if (error) {
     const response = (error as { context?: Response }).context;
     if (response) {

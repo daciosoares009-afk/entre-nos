@@ -1,8 +1,10 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { catalog } from '../_shared/catalog.ts';
 
+const defaultSiteUrl = 'https://entre-nos-eta.vercel.app';
+const genericPaymentError = 'Não foi possível processar o pagamento no momento. Tente novamente em instantes.';
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': Deno.env.get('PUBLIC_SITE_URL') || defaultSiteUrl,
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
@@ -54,23 +56,27 @@ Deno.serve(async (request) => {
     const accessToken = normalizeAccessToken(Deno.env.get('MERCADO_PAGO_ACCESS_TOKEN'));
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceRoleKey = getServiceRoleKey();
-    if (!accessToken || !supabaseUrl || !serviceRoleKey) return json({ error: 'Integração Pix não configurada.' }, 503);
+    if (!accessToken || !supabaseUrl || !serviceRoleKey) {
+      console.error('Mercado Pago Pix configuration is incomplete', { accessToken: Boolean(accessToken), supabaseUrl: Boolean(supabaseUrl), serviceRoleKey: Boolean(serviceRoleKey) });
+      return json({ error: genericPaymentError }, 503);
+    }
     const { registrationNumber, ticketCode } = await request.json();
     if (!registrationNumber || !ticketCode) return json({ error: 'Inscrição inválida.' }, 400);
 
     const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
     const { data: registration, error: registrationError } = await supabase
       .from('registrations')
-      .select('registration_number,order_number,ticket_code,payment_status')
+      .select('registration_number,order_number,ticket_code,payment_status,turnstile_verified_at')
       .eq('registration_number', registrationNumber)
       .eq('ticket_code', ticketCode)
       .single();
 
     if (registrationError || !registration) return json({ error: 'Inscrição não encontrada.' }, 404);
+    if (!registration.turnstile_verified_at) return json({ error: 'Verificação de segurança necessária para iniciar o pagamento.' }, 403);
     const orderNumber = registration.order_number || registration.registration_number;
     const { data: orderRegistrations, error: orderError } = await supabase
       .from('registrations')
-      .select('registration_number,name,email,is_order_owner,wants_shirt,shirt_quantity,wants_button,button_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity,payment_status')
+      .select('registration_number,name,email,is_order_owner,wants_shirt,shirt_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity,payment_status')
       .eq('order_number', orderNumber);
 
     if (orderError || !orderRegistrations?.length) return json({ error: 'Compra não encontrada.' }, 404);
@@ -80,7 +86,6 @@ Deno.serve(async (request) => {
     const total =
       orderRegistrations.length * catalog.ticket +
       (orderOwner.wants_shirt ? orderOwner.shirt_quantity * catalog.shirt : 0) +
-      (orderOwner.wants_button ? orderOwner.button_quantity * catalog.button : 0) +
       (orderOwner.wants_cup ? orderOwner.cup_quantity * catalog.cup : 0) +
       (orderOwner.wants_mug ? orderOwner.mug_quantity * catalog.mug : 0);
     const amount = total.toFixed(2);
@@ -113,7 +118,7 @@ Deno.serve(async (request) => {
       const detail = getErrorDetail(mercadoPagoOrder || {});
       const reference = orderResponse.headers.get('x-request-id');
       console.error('Mercado Pago Pix Order error', { status: orderResponse.status, detail, reference });
-      return json({ error: `O Mercado Pago recusou o Pix (HTTP ${orderResponse.status}).${detail ? ` Detalhe: ${detail}.` : ''}${reference ? ` Referência: ${reference}.` : ''}` }, 502);
+      return json({ error: genericPaymentError }, 502);
     }
 
     let payment = mercadoPagoOrder?.transactions?.payments?.[0];
@@ -126,7 +131,8 @@ Deno.serve(async (request) => {
     }
 
     if (!paymentMethod?.qr_code || !paymentMethod?.qr_code_base64) {
-      return json({ error: 'O Mercado Pago criou a cobrança, mas ainda não devolveu o QR Code. Tente novamente em alguns segundos.' }, 502);
+      console.error('Mercado Pago Pix QR Code missing', { orderId: mercadoPagoOrder?.id, status: mercadoPagoOrder?.status });
+      return json({ error: genericPaymentError }, 502);
     }
 
     const { error: updateError } = await supabase
@@ -152,6 +158,6 @@ Deno.serve(async (request) => {
     });
   } catch (error) {
     console.error('Create Pix Order error', error);
-    return json({ error: 'Erro inesperado ao gerar o Pix.' }, 500);
+    return json({ error: genericPaymentError }, 500);
   }
 });

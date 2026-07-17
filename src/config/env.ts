@@ -5,6 +5,7 @@ export const env = {
   whatsappNumber: (import.meta.env.VITE_WHATSAPP_NUMBER as string | undefined) || '556194540469',
   instagramUsername: (import.meta.env.VITE_INSTAGRAM_USERNAME as string | undefined) || 'entrenos_.oficial',
   publicSiteUrl: (import.meta.env.VITE_PUBLIC_SITE_URL as string | undefined) || window.location.origin,
+  turnstileSiteKey: import.meta.env.VITE_TURNSTILE_SITE_KEY as string | undefined,
 };
 
 export const isSupabaseConfigured = Boolean(env.supabaseUrl && env.supabaseAnonKey);

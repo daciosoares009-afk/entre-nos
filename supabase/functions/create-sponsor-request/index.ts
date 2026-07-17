@@ -1,5 +1,6 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { cleanText, corsHeaders, getServiceRoleKey, json, sha256 } from '../_shared/http.ts';
+import { verifyTurnstile } from '../_shared/turnstile.ts';
 
 Deno.serve(async (request) => {
   if (request.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -14,6 +15,7 @@ Deno.serve(async (request) => {
     const { data: allowed } = await supabase.rpc('consume_rate_limit', { scope_input: 'sponsor', requester_hash_input: requesterHash, limit_input: 5, window_minutes_input: 60 });
     if (allowed === false) return json({ error: 'Muitas tentativas. Aguarde uma hora ou fale com o suporte.' }, 429);
     const body = await request.json();
+    if (!(await verifyTurnstile(request, body.turnstileToken, 'sponsor'))) return json({ error: 'Verificação de segurança inválida ou expirada. Tente novamente.' }, 403);
     if (body.acceptedTerms !== true) return json({ error: 'Você precisa aceitar os termos.' }, 400);
     const companyName = cleanText(body.companyName, 120);
     const responsibleName = cleanText(body.responsibleName, 120);

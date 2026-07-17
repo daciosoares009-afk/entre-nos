@@ -84,7 +84,7 @@ Deno.serve(async (request) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
     const { data: orderRegistrations, error: lookupError } = await supabase
       .from('registrations')
-      .select('is_order_owner,wants_shirt,shirt_quantity,wants_button,button_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity')
+      .select('is_order_owner,wants_shirt,shirt_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity')
       .eq('order_number', orderNumber);
     if (lookupError || !orderRegistrations?.length) return new Response('registration not found', { status: 404 });
 
@@ -93,7 +93,6 @@ Deno.serve(async (request) => {
     const expectedAmount =
       orderRegistrations.length * catalog.ticket +
       (orderOwner.wants_shirt ? orderOwner.shirt_quantity * catalog.shirt : 0) +
-      (orderOwner.wants_button ? orderOwner.button_quantity * catalog.button : 0) +
       (orderOwner.wants_cup ? orderOwner.cup_quantity * catalog.cup : 0) +
       (orderOwner.wants_mug ? orderOwner.mug_quantity * catalog.mug : 0);
     const receivedAmount = Number(eventType === 'order' ? resource.total_amount : resource.transaction_amount);

@@ -7,10 +7,13 @@ import { FormError } from '../components/ui/FormError';
 import { sponsorSchema, type SponsorFormData } from '../schemas/sponsorSchema';
 import { createSponsorRequest } from '../services/sponsorService';
 import { maskPhone } from '../utils/format';
+import { TurnstileWidget } from '../components/ui/TurnstileWidget';
 
 export function SponsorPage() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const {
     register,
     handleSubmit,
@@ -22,11 +25,14 @@ export function SponsorPage() {
   async function onSubmit(data: SponsorFormData) {
     setError('');
     try {
-      await createSponsorRequest(data);
+      if (!turnstileToken) throw new Error('Conclua a verificação de segurança.');
+      await createSponsorRequest(data, turnstileToken);
       setSubmitted(true);
       reset();
+      setTurnstileResetKey((value) => value + 1);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Não foi possível enviar a solicitação.');
+      setTurnstileResetKey((value) => value + 1);
     }
   }
 
@@ -81,7 +87,8 @@ export function SponsorPage() {
             </span>
             <FormError message={errors.acceptedTerms?.message} />
           </label>
-          <button className="btn-primary w-full" disabled={isSubmitting}>
+          <TurnstileWidget action="sponsor" onTokenChange={setTurnstileToken} resetKey={turnstileResetKey} />
+          <button className="btn-primary w-full" disabled={isSubmitting || !turnstileToken}>
             {isSubmitting && <Loader2 className="animate-spin" size={18} />}
             Enviar proposta
           </button>

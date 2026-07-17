@@ -14,8 +14,6 @@ export type RegistrationSummary = {
   shirtColor?: 'branca' | 'preta' | '';
   shirtSize?: string;
   shirtQuantity: number;
-  wantsButton: boolean;
-  buttonQuantity: number;
   wantsCup: boolean;
   cupQuantity: number;
   wantsMug: boolean;

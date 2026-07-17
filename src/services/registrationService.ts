@@ -11,9 +11,9 @@ async function edgeError(error: unknown, fallback: string) {
   return fallback;
 }
 
-export async function createRegistration(data: RegistrationFormData): Promise<RegistrationSummary> {
+export async function createRegistration(data: RegistrationFormData, turnstileToken: string): Promise<RegistrationSummary> {
   if (!supabase) throw new Error('Supabase não configurado. Preencha VITE_SUPABASE_URL e VITE_SUPABASE_ANON_KEY.');
-  const { data: response, error } = await supabase.functions.invoke('create-registration', { body: data });
+  const { data: response, error } = await supabase.functions.invoke('create-registration', { body: { ...data, turnstileToken } });
   if (error) throw new Error(await edgeError(error, 'Não foi possível registrar a inscrição. Tente novamente em alguns instantes.'));
   if (!response?.registrationNumber || !response?.ticketCode) throw new Error('Resposta inválida do serviço de inscrição.');
   return response as RegistrationSummary;

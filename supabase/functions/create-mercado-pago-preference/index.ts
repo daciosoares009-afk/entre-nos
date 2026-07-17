@@ -1,13 +1,14 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { catalog } from '../_shared/catalog.ts';
 
+const defaultSiteUrl = 'https://entre-nos-eta.vercel.app';
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': Deno.env.get('PUBLIC_SITE_URL') || defaultSiteUrl,
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 const prices = catalog;
-const defaultSiteUrl = 'https://entre-nos-eta.vercel.app';
+const genericPaymentError = 'Não foi possível processar o pagamento no momento. Tente novamente em instantes.';
 
 function getPublicSiteOrigin(value: string | undefined) {
   try {
@@ -45,10 +46,12 @@ Deno.serve(async (request) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL');
     const serviceRoleKey = getServiceRoleKey();
     if (accessToken && !accessToken.startsWith('APP_USR-')) {
-      return json({ error: 'O segredo configurado não é um Access Token de produção do Mercado Pago. Ele deve começar com APP_USR-.' }, 503);
+      console.error('Mercado Pago access token has an unexpected format');
+      return json({ error: genericPaymentError }, 503);
     }
     if (!accessToken || !siteUrl || !supabaseUrl || !serviceRoleKey) {
-      return json({ error: 'Integração de pagamento não configurada.' }, 503);
+      console.error('Mercado Pago integration configuration is incomplete', { accessToken: Boolean(accessToken), siteUrl: Boolean(siteUrl), supabaseUrl: Boolean(supabaseUrl), serviceRoleKey: Boolean(serviceRoleKey) });
+      return json({ error: genericPaymentError }, 503);
     }
 
     const { registrationNumber, ticketCode } = await request.json();
@@ -57,16 +60,17 @@ Deno.serve(async (request) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey, { auth: { persistSession: false } });
     const { data: registration, error: registrationError } = await supabase
       .from('registrations')
-      .select('registration_number,order_number,is_order_owner,ticket_code,name,email,payment_status')
+      .select('registration_number,order_number,is_order_owner,ticket_code,name,email,payment_status,turnstile_verified_at')
       .eq('registration_number', registrationNumber)
       .eq('ticket_code', ticketCode)
       .single();
 
     if (registrationError || !registration) return json({ error: 'Inscrição não encontrada.' }, 404);
+    if (!registration.turnstile_verified_at) return json({ error: 'Verificação de segurança necessária para iniciar o pagamento.' }, 403);
     const orderNumber = registration.order_number || registration.registration_number;
     const { data: orderRegistrations, error: orderError } = await supabase
       .from('registrations')
-      .select('registration_number,name,email,is_order_owner,wants_shirt,shirt_color,shirt_size,shirt_quantity,wants_button,button_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity,payment_status')
+      .select('registration_number,name,email,is_order_owner,wants_shirt,shirt_color,shirt_size,shirt_quantity,wants_cup,cup_quantity,wants_mug,mug_quantity,payment_status')
       .eq('order_number', orderNumber);
 
     if (orderError || !orderRegistrations?.length) return json({ error: 'Compra não encontrada.' }, 404);
@@ -80,9 +84,6 @@ Deno.serve(async (request) => {
     ];
     if (orderOwner.wants_shirt && orderOwner.shirt_quantity > 0) {
       items.push({ id: 'camiseta-entre-nos', title: `Camiseta Entre Nós - ${orderOwner.shirt_color} ${orderOwner.shirt_size}`, quantity: orderOwner.shirt_quantity, currency_id: 'BRL', unit_price: prices.shirt });
-    }
-    if (orderOwner.wants_button && orderOwner.button_quantity > 0) {
-      items.push({ id: 'botton-entre-nos', title: 'Botton Entre Nós', quantity: orderOwner.button_quantity, currency_id: 'BRL', unit_price: prices.button });
     }
     if (orderOwner.wants_cup && orderOwner.cup_quantity > 0) {
       items.push({ id: 'copo-entre-nos', title: 'Copo acrílico Entre Nós', quantity: orderOwner.cup_quantity, currency_id: 'BRL', unit_price: prices.cup });
@@ -116,7 +117,6 @@ Deno.serve(async (request) => {
         typeof preference?.error === 'string' ? preference.error : '',
         ...(Array.isArray(preference?.cause) ? preference.cause.map((item: { code?: string }) => item?.code || '') : []),
       ].filter(Boolean).slice(0, 4);
-      const diagnosticSuffix = diagnosticCodes.length > 0 ? ` Código: ${diagnosticCodes.join(', ')}.` : '';
       const technicalMessage = typeof preference?.message === 'string'
         ? preference.message.replace(/[\r\n]+/g, ' ').slice(0, 240)
         : '';
@@ -126,33 +126,19 @@ Deno.serve(async (request) => {
         status: preferenceResponse.status,
         error: preference?.error,
         message: preference?.message,
+        diagnosticCodes,
+        technicalMessage,
         cause: Array.isArray(preference?.cause) ? preference.cause.map((item: { code?: string }) => item?.code).filter(Boolean) : [],
+        requestId: mercadoPagoRequestId,
       });
-
-      if (preferenceResponse.status === 401) {
-        return json({ error: 'O Mercado Pago recusou o Access Token (erro 401). Gere uma nova credencial de produção na conta do vendedor e atualize o segredo no Supabase.' }, 502);
-      }
 
       if (preferenceResponse.status === 403) {
         const identityResponse = await fetch('https://api.mercadolibre.com/users/me', {
           headers: { Authorization: `Bearer ${accessToken}` },
         });
-        const identityStatus = identityResponse.status;
-        const detail = [diagnosticCodes.join(', '), technicalMessage].filter(Boolean).join(' — ');
-        const requestReference = mercadoPagoRequestId ? ` Referência: ${mercadoPagoRequestId}.` : '';
-        const identityDetail = identityResponse.ok
-          ? ' O token autenticou a conta, mas a política do Mercado Pago bloqueou o Checkout Pro.'
-          : ` A verificação da própria conta também foi recusada (HTTP ${identityStatus}), indicando bloqueio da conta ou da credencial.`;
-        return json({ error: `O Mercado Pago recusou a criação do pagamento (erro 403).${detail ? ` Detalhe: ${detail}.` : ''}${identityDetail}${requestReference}` }, 502);
+        console.error('Mercado Pago identity diagnostic', { status: identityResponse.status, requestId: mercadoPagoRequestId });
       }
-
-      if (preferenceResponse.status === 400) {
-        const detail = [diagnosticCodes.join(', '), technicalMessage].filter(Boolean).join(' — ');
-        const requestReference = mercadoPagoRequestId ? ` Referência: ${mercadoPagoRequestId}.` : '';
-        return json({ error: `O Mercado Pago recusou os dados do checkout (erro 400).${detail ? ` Detalhe: ${detail}.` : diagnosticSuffix}${requestReference}` }, 502);
-      }
-
-      return json({ error: 'O Mercado Pago não conseguiu criar a cobrança neste momento. Tente novamente em alguns instantes.' }, 502);
+      return json({ error: genericPaymentError }, 502);
     }
 
     const { error: updateError } = await supabase.from('registrations').update({ mercado_pago_preference_id: preference.id, total_amount: serverTotal }).eq('order_number', orderNumber);
@@ -160,6 +146,6 @@ Deno.serve(async (request) => {
     return json({ checkoutUrl: preference.init_point, preferenceId: preference.id });
   } catch (error) {
     console.error('Create preference error', error);
-    return json({ error: 'Erro inesperado ao iniciar o pagamento.' }, 500);
+    return json({ error: genericPaymentError }, 500);
   }
 });

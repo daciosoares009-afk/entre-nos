@@ -4,7 +4,7 @@ import { registrationSchema } from './registrationSchema';
 const valid = {
   name: 'Maria da Silva', email: 'maria@example.com', phone: '(61) 99999-9999', age: 25, city: 'Brasília', state: 'DF',
   ticketQuantity: 2, additionalTicketNames: ['Joana da Silva'], wantsShirt: false, shirtQuantity: 1,
-  wantsButton: false, buttonQuantity: 1, wantsCup: false, cupQuantity: 1, wantsMug: false, mugQuantity: 1,
+  wantsCup: false, cupQuantity: 1, wantsMug: false, mugQuantity: 1,
   acceptedTerms: true, imageAuthorization: false, privacyConsent: true,
 };
 
