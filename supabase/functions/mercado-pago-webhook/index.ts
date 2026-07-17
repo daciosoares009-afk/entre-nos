@@ -110,6 +110,7 @@ Deno.serve(async (request) => {
       .from('registrations')
       .update({
         payment_status: status,
+        mercado_pago_preference_id: eventType === 'order' ? String(resource.id) : undefined,
         mercado_pago_payment_id: String(eventType === 'order' ? orderPayment?.id || resource.id : resource.id),
         mercado_pago_status: providerStatus,
         payment_updated_at: new Date().toISOString(),

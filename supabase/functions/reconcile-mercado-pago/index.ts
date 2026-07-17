@@ -29,7 +29,7 @@ Deno.serve(async (request) => {
     try {
       const orderId = String(owner.mercado_pago_preference_id || '');
       const paymentId = String(owner.mercado_pago_payment_id || '');
-      const isOrder = orderId.startsWith('ORD') && !['paid', 'refunded'].includes(String(owner.payment_status)) && !paymentId;
+      const isOrder = orderId.startsWith('ORD');
       const searchByReference = !isOrder && !paymentId;
       const url = isOrder
         ? `https://api.mercadopago.com/v1/orders/${encodeURIComponent(orderId)}`
