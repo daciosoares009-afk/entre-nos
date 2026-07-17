@@ -143,7 +143,7 @@ export function SuccessPage() {
         {pix && (
           <div className="mt-5 rounded-lg border border-primary/15 bg-background p-4 text-center sm:p-6">
             <h2 className="text-xl font-bold text-dark">Pix gerado</h2>
-            <p className="mt-1 text-sm text-muted">Pague {formatCurrency(pix.amount)} em qualquer banco. Não é necessário ter conta Mercado Pago.</p>
+            <p className="mt-1 text-sm text-muted">Escaneie o QR Code ou copie o código Pix para pagar {formatCurrency(pix.amount)} pelo aplicativo do seu banco.</p>
             <div className="mx-auto mt-5 w-fit rounded-lg bg-white p-3 shadow-sm">
               <QRCodeSVG value={pix.qrCode} size={220} level="M" includeMargin />
             </div>
